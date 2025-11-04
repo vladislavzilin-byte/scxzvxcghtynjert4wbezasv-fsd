@@ -48,7 +48,8 @@ export default function Admin(){
   }
 
   
-  const cancelByAdmin = (id) => {
+  /* fixed cancelByAdmin syntax */
+const cancelByAdmin = (id) => {
     if(!confirm('Отменить эту запись?')) return
     const now = new Date().toISOString()
     const list = getBookings()
@@ -66,7 +67,8 @@ export default function Admin(){
   }
 
   
-  const approveByAdmin = (id) => {
+  /* fixed approveByAdmin syntax */
+const approveByAdmin = (id) => {
     const now = new Date().toISOString()
     const list = getBookings()
     const target = list.find(b=>b.id===id)
