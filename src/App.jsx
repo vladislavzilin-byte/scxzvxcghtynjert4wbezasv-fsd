@@ -23,7 +23,7 @@ export default function App(){
       {tab==='admin' && <Admin />}
 
       <footer>
-        <img src="/logo.svg" alt="logo" /> © IZ HAIR TREND
+        <img src="/logo.svg" alt="logo" /> © 
       </footer>
     </div>
   )
