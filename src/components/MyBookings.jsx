@@ -82,7 +82,7 @@ export default function MyBookings(){
                   </tr>
                 )
               })}
-              {!list.length and <tr><td colSpan="4"><small className="muted">{t('no_records')}</small></td></tr>}
+              {!list.length && <tr><td colSpan="4"><small className="muted">{t('no_records')}</small></td></tr>}
             </tbody>
           </table>
         </div>
