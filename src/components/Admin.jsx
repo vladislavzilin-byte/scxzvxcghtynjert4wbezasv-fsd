@@ -9,7 +9,8 @@ export default function Admin(){
   const me = (typeof getCurrentUser==='function') ? getCurrentUser() : JSON.parse(localStorage.getItem('currentUser')||'{}');
   const isAdmin = me && (me.role==='admin' || (me.email && ADMINS.includes(me.email)));
   if(!isAdmin){
-    return (<div className="card"><h3>Доступ запрещён</h3><p className="muted">Эта страница доступна только администраторам.</p></div>);
+    const [view,setView] = React.useState('list');
+  return (<div className="card"><h3>Доступ запрещён</h3><p className="muted">Эта страница доступна только администраторам.</p></div>);
   }
 
   const { t } = useI18n()
@@ -148,3 +149,25 @@ export default function Admin(){
     </div>
   )
 }
+
+function ResetLog(){
+  const [items,setItems] = React.useState([])
+  const [loading,setLoading] = React.useState(true)
+  React.useEffect(()=>{ fetch('/api/reset-log').then(r=>r.json()).then(setItems).finally(()=>setLoading(false)) },[])
+  return (
+    <div className="card">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <h3>Сбросы паролей</h3>
+        <button className="ghost" onClick={()=>setView('list')}>← Назад</button>
+      </div>
+      {loading? <p className="muted">Загрузка…</p> : (
+        <table className="table"><thead><tr><th>Время</th><th>Email</th><th>Статус</th><th>Ошибка</th></tr></thead>
+        <tbody>
+          {items.map((x,i)=>(<tr key={i}><td>{new Date(x.at).toLocaleString('lt-LT')}</td><td>{x.email}</td><td>{x.status}</td><td>{x.error||'—'}</td></tr>))}
+          {items.length===0 && <tr><td colSpan="4"><small className="muted">Пока нет записей</small></td></tr>}
+        </tbody></table>
+      )}
+    </div>
+  )
+}
+if(view==='resetlog'){ return <ResetLog/> }

@@ -1,9 +1,12 @@
+import ForgotPasswordModal from './ForgotPasswordModal'
 
 import { useState } from 'react'
 import { getUsers, saveUsers, setCurrentUser, getCurrentUser } from '../lib/storage'
 import { useI18n } from '../lib/i18n'
 
 export default function Auth({ onAuth }){
+  const [showForgot,setShowForgot] = React.useState(false)
+
   const { t } = useI18n()
   const [mode,setMode]=useState('login')
   const [name,setName]=useState('')
@@ -62,7 +65,10 @@ export default function Auth({ onAuth }){
           : <div className="col"><label>{t('phone_or_email')}</label><input value={identifier} onChange={e=>setIdentifier(e.target.value)} placeholder="+3706... / email"/></div>}
         <div className="col"><label>{t('password')}</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••"/></div>
         <div className="col" style={{alignSelf:'end'}}><button type="submit">{mode==='login'?t('login'):t('register')}</button></div>
-      </form>
+      <div style={{marginTop:8}}><button type="button" className="ghost" onClick={()=>setShowForgot(true)}>Забыли пароль?</button></div>
+</form>
     </div>
   )
+  {showForgot && <ForgotPasswordModal onClose={()=>setShowForgot(false)} />}
 }
+

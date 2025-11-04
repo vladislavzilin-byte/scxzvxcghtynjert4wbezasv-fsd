@@ -4,10 +4,12 @@ import { getCurrentUser, setCurrentUser, getUsers, saveUsers } from '../lib/stor
 export default function Profile(){
   const me = getCurrentUser()
   const [edit,setEdit] = useState(false)
-  const [form,setForm] = useState({ name: me?.name||'', phone: me?.phone||'', instagram: me?.instagram||'', email: me?.email||'', currentPassword:'', password:'' })
+  const [form,setForm] = useState({ name: me?.name || '', phone: me?.phone || '', instagram: me?.instagram || '', email: me?.email || '', currentPassword:'', password:'' })
   const [msg,setMsg] = useState(null)
-  if(!me) return <div className="card"><h3>Мой профиль</h3><p className="muted">Войдите, чтобы редактировать профиль.</p></div>
-  const change=(k,v)=>setForm(p=>({...p,[k]:v}))
+
+  if(!me){ return <div className="card"><h3>Мой профиль</h3><p className="muted">Войдите, чтобы редактировать профиль.</p></div> }
+
+  const change=(k,v)=> setForm(p=>({...p,[k]:v}))
   const save=()=>{
     const list = getUsers()
     const i = list.findIndex(u=>u.email===me.email)
@@ -21,6 +23,7 @@ export default function Profile(){
     list[i].name=form.name; list[i].phone=form.phone; list[i].instagram=form.instagram
     saveUsers(list); setCurrentUser(list[i]); setEdit(false); setMsg('Изменения сохранены')
   }
+
   return (
     <div className="card">
       <h3>Мой профиль</h3>
