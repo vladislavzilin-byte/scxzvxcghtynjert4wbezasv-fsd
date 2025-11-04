@@ -1,6 +1,8 @@
+
 import Auth from './components/Auth.jsx'
 import Calendar from './components/Calendar.jsx'
 import Admin from './components/Admin.jsx'
+import MyBookings from './components/MyBookings.jsx'
 import { useState } from 'react'
 import { getCurrentUser } from './lib/storage'
 
@@ -12,14 +14,17 @@ export default function App(){
     <div className="container">
       <div className="nav">
         <div className="brand"><img src="/logo.svg" alt="logo" /><span>IZ Booking</span></div>
-        <div style={{display:'flex', gap:8}}>
+        <div className="tabs">
           <button className={tab==='calendar'?'':'ghost'} onClick={()=>setTab('calendar')}>Календарь</button>
+          <button className={tab==='my'?'':'ghost'} onClick={()=>setTab('my')}>Мои записи</button>
           <button className={tab==='admin'?'':'ghost'} onClick={()=>setTab('admin')}>Админ</button>
         </div>
       </div>
 
       <Auth onAuth={setUser} />
+
       {tab==='calendar' && <Calendar />}
+      {tab==='my' && <MyBookings />}
       {tab==='admin' && <Admin />}
 
       <footer>
