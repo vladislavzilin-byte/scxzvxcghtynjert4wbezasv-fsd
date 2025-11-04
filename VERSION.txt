@@ -1,0 +1,4 @@
+IZ Booking v7.1
+- Fix: JSX conditional in MyBookings (&&)
+- Fix: JS booleans in Admin (true/false)
+- Fix: i18n hook import React

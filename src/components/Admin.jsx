@@ -37,10 +37,10 @@ export default function Admin(){
   }, [bookings, search, statusFilter])
 
   const refresh = () => {
-    setLoading(True)
+    setLoading(true)
     setTimeout(()=>{
       setBookings(getBookings())
-      setLoading(False)
+      setLoading(false)
     }, 400)
   }
 
