@@ -1,5 +1,5 @@
 import React from "react"
-import { getCurrentUser } from "../utils/session"
+import { getCurrentUser } from "../utils/session.js"
 
 export default function Admin() {
   const me = getCurrentUser()
