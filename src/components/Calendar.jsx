@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { getBookings, saveBookings } from '../lib/storage'
 import { toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 export default function Calendar({ user }) {
   const [selectedDate, setSelectedDate] = useState('')
