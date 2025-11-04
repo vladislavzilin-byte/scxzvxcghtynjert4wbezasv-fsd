@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react'
 import { getSettings, saveSettings, getBookings, saveBookings, fmtDate, fmtTime, getCurrentUser } from '../lib/storage'
 import { exportBookingsToCSV } from '../lib/export'
+import AdminCalendar from './AdminCalendar.jsx'
 import { useI18n } from '../lib/i18n'
 
 export default function Admin(){
@@ -15,6 +16,7 @@ export default function Admin(){
   const [loading,setLoading] = useState(false)
   const [toast,setToast] = useState(null)
   const [bookings,setBookings] = useState(getBookings())
+  const [view,setView] = useState('list')
 
   const update = (patch) => { const next={...settings,...patch}; setSettings(next); saveSettings(next) }
 
@@ -87,14 +89,14 @@ export default function Admin(){
       <div className="col">
         <div className="card">
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-            <h3 style={{marginTop:0}}>{t('all_bookings')}</h3>
+            <h3 style={{marginTop:0}}>{view==='list'?t('all_bookings'):'📅 Календарь записей'}</h3>
             <div style={{display:'flex',gap:8,alignItems:'center'}}>
               {loading ? <div className="spinner" title="..."></div> : <button onClick={refresh}>{t('refresh')}</button>}
               <button onClick={handleExport}>{t('export')}</button>
             </div>
           </div>
 
-          <div style={{display:'flex',gap:8,margin:'8px 0 12px 0'}}>
+          <div style={{display:'flex',gap:8,margin:'8px 0 12px 0'}}><div style={{display:'flex',gap:8,marginRight:8}}><button className={view==='list'?'':'ghost'} onClick={()=>setView('list')}>Список</button><button className={view==='calendar'?'':'ghost'} onClick={()=>setView('calendar')}>Календарь</button></div>
             <input placeholder={t('search_placeholder')} value={search} onChange={e=>setSearch(e.target.value)} />
             <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
               <option value="all">{t('all')}</option>
@@ -137,6 +139,21 @@ export default function Admin(){
           </table>
 
           {toast && <div className="toast">{toast}</div>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// Calendar view shortcut render
+if(view==='calendar'){
+  return (
+    <div className="row">
+      <div className="col">
+        <div className="card">
+          <h3 style={{marginTop:0}}>📅 Календарь записей</h3>
+          <AdminCalendar />
         </div>
       </div>
     </div>

@@ -1,5 +1,4 @@
-IZ Booking v7.2
-- Instant reserved label on slot buttons
-- Spinner and 'Processing...' per selected slot
-- Modal shows chosen date & time + wait/where-to-see info
-- i18n keys for reserved/processing messages
+IZ Booking v7.3
+- Fixed Calendar.jsx syntax
+- Added AdminCalendar with per-day counts, detail view, approve/reject
+- Day CSV export
