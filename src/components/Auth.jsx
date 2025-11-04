@@ -30,18 +30,20 @@ export default function Auth({ onAuth }){
   const logout=()=>{ setCurrentUser(null); onAuth?.(null) }
   const current=getCurrentUser()
 
-  if(current) return (
-    <div className="card">
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
-        <div>
-          <div><b>{current.name}</b> <small className="muted">({current.phone})</small></div>
-          {current.email && <div><small className="muted">Email: {current.email}</small></div>}
-          {current.instagram && <div><small className="muted">Instagram: {current.instagram}</small></div>}
+  if(current){
+    return (
+      <div className="card">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
+          <div>
+            <div><b>{current.name}</b> <small className="muted">({current.phone})</small></div>
+            {current.email && <div><small className="muted">Email: {current.email}</small></div>}
+            {current.instagram && <div><small className="muted">Instagram: {current.instagram}</small></div>}
+          </div>
+          <button className="ghost" onClick={logout}>Выйти</button>
         </div>
-        <button className="ghost" onClick={logout}>Выйти</button>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="card">

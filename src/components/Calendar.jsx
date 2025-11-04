@@ -13,7 +13,7 @@ export default function Calendar(){
   const [modal, setModal] = useState(null)
 
   const minDate = new Date()
-  const maxDate = addMonths(new Date(), 24) // 24 months ahead
+  const maxDate = addMonths(new Date(), 24)
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)

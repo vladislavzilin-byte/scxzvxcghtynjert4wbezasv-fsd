@@ -1,5 +1,5 @@
 
-const LS_USERS='iz.users.v5'; const LS_BOOKINGS='iz.bookings.v5'; const LS_CURRENT='iz.current.v5'; const LS_SETTINGS='iz.settings.v5';
+const LS_USERS='iz.users.v6'; const LS_BOOKINGS='iz.bookings.v6'; const LS_CURRENT='iz.current.v6'; const LS_SETTINGS='iz.settings.v6';
 
 const DEFAULT_USERS=[{ name:'Vladislav Zilin', phone:'+37060000000', email:'vladislavzilin@gmail.com', password:'vladiokas', instagram:'' }];
 

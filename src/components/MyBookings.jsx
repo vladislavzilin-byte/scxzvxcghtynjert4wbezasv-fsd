@@ -4,19 +4,18 @@ import { getCurrentUser, getBookings, saveBookings, fmtDate, fmtTime } from '../
 
 export default function MyBookings(){
   const user = getCurrentUser()
-  const [filter,setFilter] = useState('all') // all | active | canceled
+  const [filter,setFilter] = useState('all')
   const [confirmId, setConfirmId] = useState(null)
 
-  const all = getBookings().filter(b=> user && b.userPhone===user.phone)
-  const active = all.filter(b=> b.status==='active' && new Date(b.end) >= new Date())
-  const canceled = all.filter(b=> b.status==='canceled_client' || b.status==='canceled_admin')
-  const past = all.filter(b=> b.status==='active' && new Date(b.end) < new Date())
+  const all = getBookings().filter(b=> user && b.userPhone===user.phone).sort((a,b)=> new Date(a.start) - new Date(b.start))
 
   const list = useMemo(()=>{
-    if(filter==='active') return active
-    if(filter==='canceled') return canceled
+    if(filter==='active') return all.filter(b=> b.status==='active')
+    if(filter==='canceled') return all.filter(b=> b.status==='canceled_client' || b.status==='canceled_admin')
     return all
   }, [filter, all.length])
+
+  const activeCount = all.filter(b=> b.status==='active' && new Date(b.end)>=new Date()).length
 
   const cancel = (id) => setConfirmId(id)
   const doCancel = () => {
@@ -30,6 +29,10 @@ export default function MyBookings(){
     return <div className="card"><b>Войдите</b> чтобы видеть личный кабинет и управлять своими записями.</div>
   }
 
+  const statusLabel = (b) => b.status==='active'
+    ? (new Date(b.end) < new Date() ? '⚫ Прошла' : '🟢 Активна')
+    : (b.status==='canceled_client' ? '❌ Отменено клиентом' : '🔴 Отменено администратором')
+
   return (
     <div className="row">
       <div className="col">
@@ -38,7 +41,7 @@ export default function MyBookings(){
           <div><b>{user.name}</b></div>
           <div><small className="muted">{user.phone}{user.email ? ' • '+user.email : ''}{user.instagram ? ' • '+user.instagram : ''}</small></div>
           <div className="hr" />
-          <div className="badge">У вас {active.length} активных запись(и)</div>
+          <div className="badge">У вас {activeCount} активных запись(и)</div>
         </div>
       </div>
       <div className="col">
@@ -55,14 +58,12 @@ export default function MyBookings(){
             <thead><tr><th>Дата</th><th>Время</th><th>Статус</th><th></th></tr></thead>
             <tbody>
               {list.map(b=>{
-                const status = b.status==='active' ? (new Date(b.end) < new Date() ? '⚫ Прошла' : '🟢 Активна') :
-                               b.status==='canceled_client' ? '❌ Отменено клиентом' : '🔴 Отменено администратором'
-                const canCancel = b.status==='active' && new Date(b.start) > new Date()
+                const canCancel = b.status==='active' && new Date(b.start)>new Date()
                 return (
                   <tr key={b.id} style={{opacity: b.status==='active' ? 1 : .6}}>
                     <td>{fmtDate(b.start)}</td>
                     <td>{fmtTime(b.start)}–{fmtTime(b.end)}</td>
-                    <td>{status}</td>
+                    <td>{statusLabel(b)}</td>
                     <td style={{width:140}}>{canCancel ? <button className="danger" onClick={()=>cancel(b.id)}>Отменить</button> : null}</td>
                   </tr>
                 )

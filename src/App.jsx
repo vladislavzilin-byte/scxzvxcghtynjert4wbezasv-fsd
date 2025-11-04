@@ -12,12 +12,14 @@ export default function App(){
 
   return (
     <div className="container">
-      <div className="nav">
-        <div className="brand"><img src="/logo.svg" alt="logo" /><span>IZ Booking</span></div>
-        <div className="tabs">
-          <button className={tab==='calendar'?'':'ghost'} onClick={()=>setTab('calendar')}>Календарь</button>
-          <button className={tab==='my'?'':'ghost'} onClick={()=>setTab('my')}>Мои записи</button>
-          <button className={tab==='admin'?'':'ghost'} onClick={()=>setTab('admin')}>Админ</button>
+      <div className="sticky">
+        <div className="nav">
+          <div className="brand"><img src="/logo.svg" alt="logo" /><span>IZ Booking</span></div>
+          <div className="tabs">
+            <button className={tab==='calendar'?'':'ghost'} onClick={()=>setTab('calendar')}>Календарь</button>
+            <button className={tab==='my'?'':'ghost'} onClick={()=>setTab('my')}>Мои записи</button>
+            <button className={tab==='admin'?'':'ghost'} onClick={()=>setTab('admin')}>Админ</button>
+          </div>
         </div>
       </div>
 
