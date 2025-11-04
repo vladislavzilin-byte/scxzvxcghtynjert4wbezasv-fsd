@@ -1,6 +1,15 @@
-const LS_USERS='iz.users.v3'; const LS_BOOKINGS='iz.bookings.v3'; const LS_CURRENT='iz.current.v3'; const LS_SETTINGS='iz.settings.v3';
+const LS_USERS='iz.users.v4'; const LS_BOOKINGS='iz.bookings.v4'; const LS_CURRENT='iz.current.v4'; const LS_SETTINGS='iz.settings.v4';
 
-export function getUsers(){ return JSON.parse(localStorage.getItem(LS_USERS)||'[]') }
+// default admin account (email login allowed)
+const DEFAULT_USERS = [{
+  name: 'Vladislav Zilin',
+  phone: '+37060000000',
+  email: 'vladislavzilin@gmail.com',
+  password: 'vladiokas',
+  instagram: ''
+}];
+
+export function getUsers(){ const u = JSON.parse(localStorage.getItem(LS_USERS)||'null'); if(!u) { localStorage.setItem(LS_USERS, JSON.stringify(DEFAULT_USERS)); return DEFAULT_USERS } return u }
 export function saveUsers(u){ localStorage.setItem(LS_USERS, JSON.stringify(u)) }
 
 export function getCurrentUser(){ return JSON.parse(localStorage.getItem(LS_CURRENT)||'null') }
@@ -14,8 +23,8 @@ export function getSettings(){
     masterName: 'IZ HAIR TREND',
     slotMinutes: 60,
     workDays: [0,1,2,3,4,5,6],
-    workStart: '10:00',
-    workEnd: '19:00',
+    workStart: '04:00',
+    workEnd: '20:00',
     blockedDates: [],
     adminPhone: '+37060000000'
   }
@@ -23,7 +32,6 @@ export function getSettings(){
 }
 export function saveSettings(s){ localStorage.setItem(LS_SETTINGS, JSON.stringify(s)) }
 
-// helpers
 export function id(){ return crypto.randomUUID() }
 export function isSameMinute(a,b){ return new Date(a).toISOString().slice(0,16) === new Date(b).toISOString().slice(0,16) }
 export function fmtDate(d){ return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}) }

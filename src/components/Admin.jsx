@@ -4,7 +4,7 @@ import { getSettings, saveSettings, getBookings, saveBookings, fmtDate, fmtTime,
 export default function Admin(){
   const [settings,setSettings] = useState(getSettings())
   const current = getCurrentUser()
-  const isAdmin = current && current.phone === settings.adminPhone
+  const isAdmin = current && (current.phone === settings.adminPhone || current.email === 'vladislavzilin@gmail.com')
 
   const update = (patch) => {
     const next = { ...settings, ...patch }
@@ -50,25 +50,6 @@ export default function Admin(){
             <div className="col">
               <label>Длительность слота (мин)</label>
               <input type="number" min="15" step="15" value={settings.slotMinutes} onChange={e=>update({slotMinutes:parseInt(e.target.value||'60', 10)})} />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col">
-              <label>Рабочие дни (0=Вс ... 6=Сб)</label>
-              <input value={settings.workDays.join(',')} onChange={e=>update({workDays: e.target.value.split(',').map(v=>parseInt(v.trim(),10)).filter(v=>!isNaN(v))})} />
-              <small className="muted">По умолчанию: 0,1,2,3,4,5,6</small>
-            </div>
-            <div className="col">
-              <label>Добавить выходной (YYYY-MM-DD)</label>
-              <input type="date" onChange={e=>update({ blockedDates: [...new Set([...(settings.blockedDates||[]), e.target.value].filter(Boolean))] })} />
-              <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:8}}>
-                {(settings.blockedDates||[]).map(d => (
-                  <span key={d} className="badge" style={{display:'inline-flex',gap:8,alignItems:'center'}}>
-                    {d} <a href="#" onClick={(ev)=>{ev.preventDefault(); update({ blockedDates: settings.blockedDates.filter(x=>x!==d) })}}>×</a>
-                  </span>
-                ))}
-                {!settings.blockedDates?.length && <small className="muted">Нет</small>}
-              </div>
             </div>
           </div>
         </div>

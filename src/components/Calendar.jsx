@@ -9,6 +9,7 @@ export default function Calendar(){
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()))
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [busy, setBusy] = useState(false)
+  const [modal, setModal] = useState(null) // {title, dateStr, timeStr}
 
   const minDate = new Date()
   const maxDate = addMonths(new Date(), 1)
@@ -51,8 +52,15 @@ export default function Calendar(){
     const newB = { id:id(), userPhone:user.phone, userName:user.name, userInstagram:user.instagram||'', start:t, end, createdAt:new Date().toISOString() }
     saveBookings([ ...bookings, newB ])
     setBusy(false)
-    alert('Бронь подтверждена!')
+    // show modal confirmation
+    setModal({
+      title: 'Запись к ' + settings.masterName + ' подтверждена!',
+      dateStr: format(t, 'dd.MM.yyyy'),
+      timeStr: format(t, 'HH:mm') + ' – ' + format(end, 'HH:mm')
+    })
   }
+
+  const closeModal = () => setModal(null)
 
   const goPrev = () => setCurrentMonth(addMonths(currentMonth, -1))
   const goNext = () => setCurrentMonth(addMonths(currentMonth, 1))
@@ -100,6 +108,19 @@ export default function Calendar(){
           {!slotsForDay(selectedDate).length && <small className="muted">Нет доступных слотов</small>}
         </div>
       </div>
+
+      {modal && (
+        <div className="modal-backdrop" onClick={closeModal}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <h3>{modal.title}</h3>
+            <p style={{margin:'6px 0'}}>{modal.dateStr}</p>
+            <p style={{margin:'6px 0', fontWeight:700}}>{modal.timeStr}</p>
+            <div style={{marginTop:12}}>
+              <button onClick={closeModal}>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
