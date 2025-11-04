@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, isSameMonth, isSameDay, format } from 'date-fns'
 import { getBookings, saveBookings, getSettings, getCurrentUser, id, isSameMinute } from '../lib/storage'
+import { t } from '../lib/i18n'
 
 function dayISO(d){ return new Date(d).toISOString().slice(0,10) }
 
@@ -40,18 +41,26 @@ export default function Calendar(){
     return slots
   }
 
-  const isBooked = (t) => bookings.some(b => b.status!=='canceled_client' && b.status!=='canceled_admin' && isSameMinute(b.start, t))
+  const isTaken = (t) => bookings.some(b => (b.status==='active' || b.status==='pending') && isSameMinute(b.start, t))
 
   const book = (t) => {
     const user = getCurrentUser()
-    if(!user) return alert('Войдите или зарегистрируйтесь')
-    if(isBooked(t)) return alert('Этот слот уже занят')
+    if(!user) return alert(t('requiresLogin'))
+    if(isTaken(t)) return alert(t('slotTaken'))
     setBusy(true)
     const end = new Date(t); end.setMinutes(end.getMinutes() + settings.slotMinutes)
-    const newB = { id:id(), userPhone:user.phone, userName:user.name, userInstagram:user.instagram||'', start:t, end, status:'active', createdAt:new Date().toISOString() }
+    const newB = {
+      id:id(), userPhone:user.phone, userName:user.name, userInstagram:user.instagram||'',
+      start:t, end, status:'pending', createdAt:new Date().toISOString()
+    }
     saveBookings([ ...bookings, newB ])
     setBusy(false)
-    setModal({ title: 'Запись к ' + settings.masterName + ' подтверждена!', dateStr: format(t,'dd.MM.yyyy'), timeStr: format(t,'HH:mm')+' – '+format(end,'HH:mm') })
+    setModal({
+      title: t('confirmTitle')(settings.masterName),
+      subtitle: t('confirmSubtitle'),
+      dateStr: format(t,'dd.MM.yyyy'),
+      timeStr: format(t,'HH:mm')+' – '+format(end,'HH:mm')
+    })
   }
 
   const closeModal = () => setModal(null)
@@ -81,13 +90,13 @@ export default function Calendar(){
       <div className="hr" />
 
       <div>
-        <div className="badge">Слоты на {format(selectedDate,'dd.MM.yyyy')}</div>
+        <div className="badge">{t('slotsFor')} {format(selectedDate,'dd.MM.yyyy')}</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:8}}>
-          {slotsForDay(selectedDate).map(t=>{
-            const taken=isBooked(t)
-            return <button key={t.toISOString()} disabled={taken||busy} className={taken?'ghost':'ok'} onClick={()=>book(t)}>{format(t,'HH:mm')}{taken?' — занято':''}</button>
+          {slotsForDay(selectedDate).map(ti=>{
+            const taken=isTaken(ti)
+            return <button key={ti.toISOString()} disabled={taken||busy} className={taken?'ghost':'ok'} onClick={()=>book(ti)}>{format(ti,'HH:mm')}{taken?` ${t('booked')}`:''}</button>
           })}
-          {!slotsForDay(selectedDate).length && <small className="muted">Нет доступных слотов</small>}
+          {!slotsForDay(selectedDate).length && <small className="muted">—</small>}
         </div>
       </div>
 
@@ -95,9 +104,10 @@ export default function Calendar(){
         <div className="modal-backdrop" onClick={closeModal}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
             <h3>{modal.title}</h3>
+            <p className="muted" style={{marginTop:4}}>{modal.subtitle}</p>
             <p style={{margin:'6px 0'}}>{modal.dateStr}</p>
             <p style={{margin:'6px 0', fontWeight:700}}>{modal.timeStr}</p>
-            <div style={{marginTop:12}}><button onClick={closeModal}>OK</button></div>
+            <div style={{marginTop:12}}><button onClick={closeModal}>{t('ok')}</button></div>
           </div>
         </div>
       )}
