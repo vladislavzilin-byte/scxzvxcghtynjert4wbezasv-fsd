@@ -1,0 +1,30 @@
+const LS_USERS='iz.users.v3'; const LS_BOOKINGS='iz.bookings.v3'; const LS_CURRENT='iz.current.v3'; const LS_SETTINGS='iz.settings.v3';
+
+export function getUsers(){ return JSON.parse(localStorage.getItem(LS_USERS)||'[]') }
+export function saveUsers(u){ localStorage.setItem(LS_USERS, JSON.stringify(u)) }
+
+export function getCurrentUser(){ return JSON.parse(localStorage.getItem(LS_CURRENT)||'null') }
+export function setCurrentUser(u){ if(u) localStorage.setItem(LS_CURRENT, JSON.stringify(u)); else localStorage.removeItem(LS_CURRENT) }
+
+export function getBookings(){ return JSON.parse(localStorage.getItem(LS_BOOKINGS)||'[]') }
+export function saveBookings(b){ localStorage.setItem(LS_BOOKINGS, JSON.stringify(b)) }
+
+export function getSettings(){
+  const def = {
+    masterName: 'IZ HAIR TREND',
+    slotMinutes: 60,
+    workDays: [0,1,2,3,4,5,6],
+    workStart: '10:00',
+    workEnd: '19:00',
+    blockedDates: [],
+    adminPhone: '+37060000000'
+  }
+  return JSON.parse(localStorage.getItem(LS_SETTINGS)||'null') || def
+}
+export function saveSettings(s){ localStorage.setItem(LS_SETTINGS, JSON.stringify(s)) }
+
+// helpers
+export function id(){ return crypto.randomUUID() }
+export function isSameMinute(a,b){ return new Date(a).toISOString().slice(0,16) === new Date(b).toISOString().slice(0,16) }
+export function fmtDate(d){ return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}) }
+export function fmtTime(d){ return new Date(d).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) }
