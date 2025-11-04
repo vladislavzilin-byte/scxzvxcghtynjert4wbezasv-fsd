@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { getBookings, saveBookings } from '../lib/storage'
 import { sendEmail } from '../lib/email'
-import { BookingList } from './BookingList'
-import { AdminCalendar } from './AdminCalendar'
+import MyBookings from './MyBookings'
+import Calendar from './Calendar'
 
 export default function Admin() {
   const [bookings, setBookings] = useState(getBookings())
@@ -53,7 +53,7 @@ export default function Admin() {
     return (
       <div className="admin-calendar-view">
         <h2>📅 Календарь записей</h2>
-        <AdminCalendar bookings={bookings} onApprove={approveByAdmin} onCancel={cancelByAdmin} />
+        <Calendar bookings={bookings} onApprove={approveByAdmin} onCancel={cancelByAdmin} />
         <button onClick={() => setView('list')}>Назад к списку</button>
       </div>
     )
@@ -62,7 +62,7 @@ export default function Admin() {
   return (
     <div className="admin-list-view">
       <h2>Все записи</h2>
-      <BookingList
+      <MyBookings
         bookings={bookings}
         onApprove={approveByAdmin}
         onCancel={cancelByAdmin}
