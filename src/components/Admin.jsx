@@ -15,7 +15,6 @@ export default function Admin(){
   const { t } = useI18n()
   const [settings,setSettings] = useState(getSettings())
   const current = getCurrentUser()
-  const isAdmin = current && (current.phone === settings.adminPhone || current.email === 'vladislavzilin@gmail.com')
 
   const [search,setSearch] = useState('')
   const [statusFilter,setStatusFilter] = useState('all')
