@@ -13,6 +13,11 @@ export default function Admin(){
   return (<div className="card"><h3>Доступ запрещён</h3><p className="muted">Эта страница доступна только администраторам.</p></div>);
   }
 
+  if (view === 'resetlog') {
+    return <ResetLog setView={setView} />
+  }
+
+
   const { t } = useI18n()
   const [settings,setSettings] = useState(getSettings())
   const current = getCurrentUser()
@@ -170,4 +175,3 @@ function ResetLog(){
     </div>
   )
 }
-if(view==='resetlog'){ return <ResetLog/> }
