@@ -1,5 +1,5 @@
 
-const LS_USERS='iz.users.v7'; const LS_BOOKINGS='iz.bookings.v7'; const LS_CURRENT='iz.current.v7'; const LS_SETTINGS='iz.settings.v7';
+const LS_USERS='iz.users.v7'; const LS_BOOKINGS='iz.bookings.v7'; const LS_CURRENT='iz.current.v7'; const LS_SETTINGS='iz.settings.v7'; const LS_LANG='iz.lang.v7';
 
 const DEFAULT_USERS=[{ name:'Vladislav Zilin', phone:'+37060000000', email:'vladislavzilin@gmail.com', password:'vladiokas', instagram:'' }];
 
@@ -22,3 +22,7 @@ export function id(){ return crypto.randomUUID() }
 export function isSameMinute(a,b){ return new Date(a).toISOString().slice(0,16)===new Date(b).toISOString().slice(0,16) }
 export function fmtDate(d){ return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}) }
 export function fmtTime(d){ return new Date(d).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) }
+
+// language
+export function getLang(){ return localStorage.getItem(LS_LANG) || 'ru' }
+export function setLang(l){ localStorage.setItem(LS_LANG, l) }

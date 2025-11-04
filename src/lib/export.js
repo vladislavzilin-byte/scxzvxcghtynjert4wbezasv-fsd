@@ -9,7 +9,7 @@ export function exportBookingsToCSV(bookings){
     b.userInstagram||'',
     fmtDate(b.start),
     `${fmtTime(b.start)}–${fmtTime(b.end)}`,
-    b.status||'active',
+    b.status||'pending',
     b.status==='canceled_client'?'клиент':(b.status==='canceled_admin'?'администратор':'—')
   ])
   const csv=[head,...rows].map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n')

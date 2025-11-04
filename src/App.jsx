@@ -3,37 +3,28 @@ import Auth from './components/Auth.jsx'
 import Calendar from './components/Calendar.jsx'
 import Admin from './components/Admin.jsx'
 import MyBookings from './components/MyBookings.jsx'
-import { useEffect, useState } from 'react'
-import { getCurrentUser } from './lib/storage'
-import { t, getLang, setLang, dictionariesList } from './lib/i18n'
+import { useState } from 'react'
+import { getCurrentUser, getLang, setLang } from './lib/storage'
+import { useI18n, dict } from './lib/i18n'
 
 export default function App(){
+  const { lang, setLang, t } = useI18n()
   const [tab, setTab] = useState('calendar')
   const [user, setUser] = useState(getCurrentUser())
-  const [lang, setLangState] = useState(getLang())
-
-  useEffect(()=>{
-    const onChange = (e)=> setLangState(e.detail.code)
-    window.addEventListener('lang-change', onChange)
-    return ()=> window.removeEventListener('lang-change', onChange)
-  }, [])
-
-  const changeLang = (e) => setLang(e.target.value)
 
   return (
     <div className="container">
       <div className="sticky">
         <div className="nav">
-          <div className="brand"><img src="/logo.svg" alt="logo" /><span>IZ Booking</span></div>
+          <div className="brand"><img src="/logo.svg" alt="logo" /><span>{t('brand')}</span></div>
           <div className="tabs">
-            <button className={tab==='calendar'?'':'ghost'} onClick={()=>setTab('calendar')}>{t('calendar')}</button>
-            <button className={tab==='my'?'':'ghost'} onClick={()=>setTab('my')}>{t('my')}</button>
-            <button className={tab==='admin'?'':'ghost'} onClick={()=>setTab('admin')}>{t('admin')}</button>
+            <button className={tab==='calendar'?'':'ghost'} onClick={()=>setTab('calendar')}>{t('nav_calendar')}</button>
+            <button className={tab==='my'?'':'ghost'} onClick={()=>setTab('my')}>{t('nav_my')}</button>
+            <button className={tab==='admin'?'':'ghost'} onClick={()=>setTab('admin')}>{t('nav_admin')}</button>
             <div className="lang">
-              <label className="muted">{t('lang')}</label>
-              <select value={lang} onChange={changeLang}>
-                {dictionariesList.map(l => <option value={l} key={l}>{l.toUpperCase()}</option>)}
-              </select>
+              <button className={lang==='lt'?'':'ghost'} onClick={()=>setLang('lt')}>🇱🇹</button>
+              <button className={lang==='ru'?'':'ghost'} onClick={()=>setLang('ru')}>🇷🇺</button>
+              <button className={lang==='en'?'':'ghost'} onClick={()=>setLang('en')}>🇬🇧</button>
             </div>
           </div>
         </div>

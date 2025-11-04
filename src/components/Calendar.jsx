@@ -2,11 +2,12 @@
 import { useMemo, useState } from 'react'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, isSameMonth, isSameDay, format } from 'date-fns'
 import { getBookings, saveBookings, getSettings, getCurrentUser, id, isSameMinute } from '../lib/storage'
-import { t } from '../lib/i18n'
+import { useI18n } from '../lib/i18n'
 
 function dayISO(d){ return new Date(d).toISOString().slice(0,10) }
 
 export default function Calendar(){
+  const { t } = useI18n()
   const settings = getSettings()
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()))
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -41,26 +42,19 @@ export default function Calendar(){
     return slots
   }
 
-  const isTaken = (t) => bookings.some(b => (b.status==='active' || b.status==='pending') && isSameMinute(b.start, t))
+  // taken if approved or pending (we can also allow multiple pending same slot? better: block)
+  const isTaken = (t) => bookings.some(b => (b.status==='approved' || b.status==='pending') && isSameMinute(b.start, t))
 
   const book = (t) => {
     const user = getCurrentUser()
-    if(!user) return alert(t('requiresLogin'))
-    if(isTaken(t)) return alert(t('slotTaken'))
+    if(!user) return alert(t('login_or_register'))
+    if(isTaken(t)) return alert(t('already_booked'))
     setBusy(true)
     const end = new Date(t); end.setMinutes(end.getMinutes() + settings.slotMinutes)
-    const newB = {
-      id:id(), userPhone:user.phone, userName:user.name, userInstagram:user.instagram||'',
-      start:t, end, status:'pending', createdAt:new Date().toISOString()
-    }
+    const newB = { id:id(), userPhone:user.phone, userName:user.name, userInstagram:user.instagram||'', start:t, end, status:'pending', createdAt:new Date().toISOString() }
     saveBookings([ ...bookings, newB ])
     setBusy(false)
-    setModal({
-      title: t('confirmTitle')(settings.masterName),
-      subtitle: t('confirmSubtitle'),
-      dateStr: format(t,'dd.MM.yyyy'),
-      timeStr: format(t,'HH:mm')+' – '+format(end,'HH:mm')
-    })
+    setModal({ title: t('pending_title'), caption: t('pending_caption') })
   }
 
   const closeModal = () => setModal(null)
@@ -90,13 +84,13 @@ export default function Calendar(){
       <div className="hr" />
 
       <div>
-        <div className="badge">{t('slotsFor')} {format(selectedDate,'dd.MM.yyyy')}</div>
+        <div className="badge">{t('slots_for')} {format(selectedDate,'dd.MM.yyyy')}</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:8}}>
           {slotsForDay(selectedDate).map(ti=>{
             const taken=isTaken(ti)
-            return <button key={ti.toISOString()} disabled={taken||busy} className={taken?'ghost':'ok'} onClick={()=>book(ti)}>{format(ti,'HH:mm')}{taken?` ${t('booked')}`:''}</button>
+            return <button key={ti.toISOString()} disabled={taken||busy} className={taken?'ghost':'ok'} onClick={()=>book(ti)}>{format(ti,'HH:mm')}{taken?' — '+t('already_booked'):''}</button>
           })}
-          {!slotsForDay(selectedDate).length && <small className="muted">—</small>}
+          {!slotsForDay(selectedDate).length && <small className="muted">Нет доступных слотов</small>}
         </div>
       </div>
 
@@ -104,10 +98,8 @@ export default function Calendar(){
         <div className="modal-backdrop" onClick={closeModal}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
             <h3>{modal.title}</h3>
-            <p className="muted" style={{marginTop:4}}>{modal.subtitle}</p>
-            <p style={{margin:'6px 0'}}>{modal.dateStr}</p>
-            <p style={{margin:'6px 0', fontWeight:700}}>{modal.timeStr}</p>
-            <div style={{marginTop:12}}><button onClick={closeModal}>{t('ok')}</button></div>
+            {modal.caption && <p style={{margin:'6px 0'}}>{modal.caption}</p>}
+            <div style={{marginTop:12}}><button onClick={closeModal}>OK</button></div>
           </div>
         </div>
       )}
