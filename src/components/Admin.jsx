@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react'
 import { getSettings, saveSettings, getBookings, saveBookings, fmtDate, fmtTime, getCurrentUser } from '../lib/storage'
 import { exportBookingsToCSV } from '../lib/export'
+import { sendEmail } from '../lib/email'
 import AdminCalendar from './AdminCalendar.jsx'
 import { useI18n } from '../lib/i18n'
 
@@ -46,15 +47,37 @@ export default function Admin(){
     }, 400)
   }
 
+  
   const cancelByAdmin = (id) => {
     if(!confirm('Отменить эту запись?')) return
-    const next = getBookings().map(b=> b.id===id ? { ...b, status:'canceled_admin', canceledAt:new Date().toISOString() } : b)
+    const now = new Date().toISOString()
+    const list = getBookings()
+    const target = list.find(b=>b.id===id)
+    const next = list.map(b=> b.id===id ? { ...b, status:'canceled_admin', canceledAt: now, notified: false } : b)
+    saveBookings(next)
+    setBookings(next)
+    if(target && target.userEmail){
+      sendEmail(target.userEmail, 'Запись отменена', `Здравствуйте, ${target.userName}. Запись была отменена администратором.`)
+    }
+  }
+     : b)
     saveBookings(next)
     setBookings(next)
   }
 
+  
   const approveByAdmin = (id) => {
-    const next = getBookings().map(b=> b.id===id ? { ...b, status:'approved', approvedAt:new Date().toISOString() } : b)
+    const now = new Date().toISOString()
+    const list = getBookings()
+    const target = list.find(b=>b.id===id)
+    const next = list.map(b=> b.id===id ? { ...b, status:'approved', approvedAt: now, notified: false } : b)
+    saveBookings(next)
+    setBookings(next)
+    if(target && target.userEmail){
+      sendEmail(target.userEmail, 'Ваша запись подтверждена', `Здравствуйте, ${target.userName}! Ваша запись подтверждена.`)
+    }
+  }
+     : b)
     saveBookings(next)
     setBookings(next)
   }

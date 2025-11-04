@@ -63,6 +63,13 @@ export const dict = {
     booked_success: 'Запись создана!',
     wait_confirmation: 'Ждите подтверждения администратора.',
     details_in_my: 'Подробности в разделе «Мои записи».',
+    notif_approved: 'Ваша запись подтверждена!',
+    notif_canceled: 'Ваша запись отменена администратором.',
+    notif_ok: 'Понятно',
+    today: 'Сегодня',
+    this_week: 'Эта неделя',
+    this_month: 'Этот месяц',
+    only_future: 'Только будущие',
   },
   lt: {
     brand: 'IZ Registracija',
@@ -124,6 +131,13 @@ export const dict = {
     booked_success: 'Vizitas sukurtas!',
     wait_confirmation: 'Laukite administratoriaus patvirtinimo.',
     details_in_my: 'Išsamiau skiltyje „Mano vizitai“.',
+    notif_approved: 'Jūsų vizitas patvirtintas!',
+    notif_canceled: 'Jūsų vizitas atšauktas administratoriaus.',
+    notif_ok: 'Gerai',
+    today: 'Šiandien',
+    this_week: 'Ši savaitė',
+    this_month: 'Šis mėnuo',
+    only_future: 'Tik būsimi',
   },
   en: {
     brand: 'IZ Booking',
@@ -185,6 +199,13 @@ export const dict = {
     booked_success: 'Booking created!',
     wait_confirmation: 'Please wait for admin approval.',
     details_in_my: 'See details in “My bookings”.',
+    notif_approved: 'Your booking was approved!',
+    notif_canceled: 'Your booking was canceled by admin.',
+    notif_ok: 'OK',
+    today: 'Today',
+    this_week: 'This week',
+    this_month: 'This month',
+    only_future: 'Only future',
   }
 }
 

@@ -1,3 +1,4 @@
+import React from 'react'
 
 import { useMemo, useState } from 'react'
 import { getCurrentUser, getBookings, saveBookings, fmtDate, fmtTime } from '../lib/storage'
@@ -22,6 +23,24 @@ export default function MyBookings(){
   }, [filter, version, bookingsAll.length])
 
   const activeCount = all.filter(b=> b.status==='approved' && new Date(b.end)>=new Date()).length
+
+const [notif, setNotif] = useState(null)
+
+// Check for new approvals/cancellations on mount or refresh
+React.useEffect(()=>{
+  if(!user) return
+  const list = getBookings()
+  const mine = list.filter(b=> b.userPhone===user.phone && (b.status==='approved' || b.status==='canceled_admin') && !b.notified)
+  if(mine.length){
+    const b = mine[0]
+    const msg = b.status==='approved' ? t('notif_approved') : t('notif_canceled')
+    setNotif({ msg })
+    // mark as notified
+    const next = list.map(x=> x.id===b.id ? { ...x, notified:true } : x)
+    saveBookings(next)
+  }
+}, [version])
+
 
   const cancel = (id) => setConfirmId(id)
   const doCancel = () => {
@@ -100,6 +119,17 @@ export default function MyBookings(){
           </div>
         </div>
       )}
+    
+
+{notif && (
+  <div className="modal-backdrop" onClick={()=>setNotif(null)}>
+    <div className="modal" onClick={e=>e.stopPropagation()}>
+      <h3>{notif.msg}</h3>
+      <div style={{marginTop:12}}><button onClick={()=>setNotif(null)}>{t('notif_ok')}</button></div>
+    </div>
+  </div>
+)}
+
     </div>
   )
 }
