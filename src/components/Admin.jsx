@@ -59,12 +59,11 @@ const cancelByAdmin = (id) => {
     setBookings(next)
     if(target && target.userEmail){
       sendEmail(target.userEmail, 'Запись отменена', `Здравствуйте, ${target.userName}. Запись была отменена администратором.`)
-    }
-  }
-     : b)
-    saveBookings(next)
-    setBookings(next)
-  }
+const next = list.map(b => 
+  b.id === id 
+    ? { ...b, status: 'approved', approvedAt: now, notified: false } 
+    : b
+);
 
   
   /* fixed approveByAdmin syntax */
@@ -77,12 +76,11 @@ const approveByAdmin = (id) => {
     setBookings(next)
     if(target && target.userEmail){
       sendEmail(target.userEmail, 'Ваша запись подтверждена', `Здравствуйте, ${target.userName}! Ваша запись подтверждена.`)
-    }
-  }
-     : b)
-    saveBookings(next)
-    setBookings(next)
-  }
+const next = list.map(b => 
+  b.id === id 
+    ? { ...b, status: 'canceled_admin', canceledAt: now, notified: false } 
+    : b
+);
 
   const handleExport = () => {
     const { name, count } = exportBookingsToCSV(filtered)
