@@ -58,6 +58,11 @@ export const dict = {
     total: 'Всего',
     total_active: 'Активных',
     total_canceled: 'Отменённых',
+    reserved_label: 'Зарезервировано',
+    processing: '⏳ Обработка...',
+    booked_success: 'Запись создана!',
+    wait_confirmation: 'Ждите подтверждения администратора.',
+    details_in_my: 'Подробности в разделе «Мои записи».',
   },
   lt: {
     brand: 'IZ Registracija',
@@ -114,6 +119,11 @@ export const dict = {
     total: 'Iš viso',
     total_active: 'Aktyvių',
     total_canceled: 'Atšauktų',
+    reserved_label: 'Rezervuota',
+    processing: '⏳ Apdorojama...',
+    booked_success: 'Vizitas sukurtas!',
+    wait_confirmation: 'Laukite administratoriaus patvirtinimo.',
+    details_in_my: 'Išsamiau skiltyje „Mano vizitai“.',
   },
   en: {
     brand: 'IZ Booking',
@@ -170,6 +180,11 @@ export const dict = {
     total: 'Total',
     total_active: 'Active',
     total_canceled: 'Canceled',
+    reserved_label: 'Booked',
+    processing: '⏳ Processing...',
+    booked_success: 'Booking created!',
+    wait_confirmation: 'Please wait for admin approval.',
+    details_in_my: 'See details in “My bookings”.',
   }
 }
 
