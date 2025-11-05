@@ -1,39 +1,56 @@
-import React from 'react'
-import ForgotPasswordModal from './ForgotPasswordModal'
-import { getUsers, saveUsers, setCurrentUser } from '../lib/storage'
+import React, { useState } from "react";
+import { getUsers, saveCurrentUser } from "../utils/storage";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 
-export default function Login(){
-  const [email,setEmail] = React.useState('')
-  const [password,setPassword] = React.useState('')
-  const [showForgot,setShowForgot] = React.useState(false)
-  const [msg,setMsg] = React.useState(null)
+export default function Login({ onLogin }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [showForgot, setShowForgot] = useState(false);
 
-  const doLogin = (e)=>{
-    e.preventDefault()
-    const users = getUsers()
-    const u = users.find(x=>x.email===email && String(x.password)===String(password))
-    if(u){ setCurrentUser(u); setMsg('Вход выполнен') } else { setMsg('Неверный e-mail или пароль') }
-  }
+  const handleLogin = () => {
+    const users = getUsers();
+    const user = users.find(
+      (u) => (u.email === email || u.phone === email) && u.password === password
+    );
 
-  // seed admins if empty
-  React.useEffect(()=>{
-    const list = getUsers()
-    if(list.length===0){
-      list.push({ email:'irina.abramova7@gmail.com', password:'vladiokas', role:'admin', name:'Irina' })
-      list.push({ email:'vladislavzilin@gmail.com', password:'vladiokas', role:'admin', name:'Vladislav' })
-      saveUsers(list)
+    if (!user) {
+      setError("Неверный логин или пароль");
+      return;
     }
-  },[])
 
-  return (<div className="card">
-    <h3>Вход</h3>
-    <form onSubmit={doLogin}>
-      <label>E-mail</label><input value={email} onChange={e=>setEmail(e.target.value)} />
-      <label>Пароль</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-      <button type="submit">Войти</button>
-      <div style={{marginTop:8}}><button type="button" className="ghost" onClick={()=>setShowForgot(true)}>Забыли пароль?</button></div>
-    </form>
-    {msg && <p style={{marginTop:8}}>{msg}</p>}
-    {showForgot && <ForgotPasswordModal onClose={()=>setShowForgot(false)} />}
-  </div>)
+    setError(null);
+    saveCurrentUser(user);
+    onLogin && onLogin(user);
+  };
+
+  return (
+    <div className="card">
+      <h2>Вход</h2>
+
+      <input
+        type="text"
+        placeholder="Email или телефон"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+
+      <input
+        type="password"
+        placeholder="Пароль"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      {error && <p className="error">{error}</p>}
+
+      <button onClick={handleLogin}>Войти</button>
+
+      <p className="forgot" style={{marginTop:8, cursor:'pointer', opacity:.85}} onClick={() => setShowForgot(true)}>
+        Забыли пароль?
+      </p>
+
+      {showForgot && <ForgotPasswordModal onClose={() => setShowForgot(false)} />}
+    </div>
+  );
 }
