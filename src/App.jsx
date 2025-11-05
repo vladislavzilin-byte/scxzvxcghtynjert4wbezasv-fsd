@@ -1,37 +1,44 @@
-import React, { useState } from "react";
-import Login from "./components/Login";
-import Profile from "./components/Profile";
-import { getCurrentUser, saveCurrentUser } from "./utils/storage";
 
-export default function App() {
-  const [user, setUser] = useState(getCurrentUser());
+import Auth from './components/Auth.jsx'
+import Calendar from './components/Calendar.jsx'
+import Admin from './components/Admin.jsx'
+import MyBookings from './components/MyBookings.jsx'
+import { useState } from 'react'
+import { getCurrentUser, getLang, setLang } from './lib/storage'
+import { useI18n, dict } from './lib/i18n'
 
-  const handleLogout = () => {
-    saveCurrentUser(null);
-    setUser(null);
-  };
-
-  if (!user) {
-    return <div style={{maxWidth:920,margin:'40px auto',padding:'0 16px'}}><Login onLogin={setUser} /></div>;
-  }
+export default function App(){
+  const { lang, setLang, t } = useI18n()
+  const [tab, setTab] = useState('calendar')
+  const [user, setUser] = useState(getCurrentUser())
 
   return (
-    <div style={{maxWidth:920,margin:'40px auto',padding:'0 16px'}}>
-      <header style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-        <h1 style={{margin:0}}>IZ Booking</h1>
-        <button className="ghost" onClick={handleLogout}>Выйти</button>
-      </header>
-      <Profile />
-      <style>{`
-        body{ background:#0f1014; color:#fff; font-family: Inter, system-ui, Arial }
-        .card{ background:#12131a; border:1px solid #23242c; border-radius:14px; padding:16px }
-        input, button{ padding:10px 12px; border-radius:10px; border:1px solid #2b2d33; background:#191a1f; color:#fff }
-        label{ display:block; margin-top:10px; margin-bottom:6px; opacity:.85 }
-        .ghost{ background:transparent; border:1px solid #2b2d33; color:#fff; border-radius:10px; padding:8px 12px; cursor:pointer }
-        .error{ color:#ff7a7a; margin-top:8px }
-        .success{ color:#a2ffb2; margin-top:8px }
-        .muted{ opacity:.7 }
-      `}</style>
+    <div className="container">
+      <div className="sticky">
+        <div className="nav">
+          <div className="brand"><img src="/logo.svg" alt="logo" /><span>{t('brand')}</span></div>
+          <div className="tabs">
+            <button className={tab==='calendar'?'':'ghost'} onClick={()=>setTab('calendar')}>{t('nav_calendar')}</button>
+            <button className={tab==='my'?'':'ghost'} onClick={()=>setTab('my')}>{t('nav_my')}</button>
+            <button className={tab==='admin'?'':'ghost'} onClick={()=>setTab('admin')}>{t('nav_admin')}</button>
+            <div className="lang">
+              <button className={lang==='lt'?'':'ghost'} onClick={()=>setLang('lt')}>🇱🇹</button>
+              <button className={lang==='ru'?'':'ghost'} onClick={()=>setLang('ru')}>🇷🇺</button>
+              <button className={lang==='en'?'':'ghost'} onClick={()=>setLang('en')}>🇬🇧</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Auth onAuth={setUser} />
+
+      {tab==='calendar' && <Calendar />}
+      {tab==='my' && <MyBookings />}
+      {tab==='admin' && <Admin />}
+
+      <footer>
+        <img src="/logo.svg" alt="logo" /> © IZ HAIR TREND
+      </footer>
     </div>
-  );
+  )
 }

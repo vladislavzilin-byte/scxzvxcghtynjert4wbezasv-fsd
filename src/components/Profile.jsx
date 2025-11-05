@@ -1,77 +1,28 @@
-import React, { useState } from "react";
-import { getCurrentUser, updateUser, saveCurrentUser } from "../utils/storage";
-
-export default function Profile() {
-  const user = getCurrentUser();
-  if(!user){ return <div className="card"><h2>Мой профиль</h2><p className="muted">Войдите, чтобы редактировать профиль.</p></div> }
-
-  const [name, setName] = useState(user.name||'');
-  const [phone, setPhone] = useState(user.phone||'');
-  const [inst, setInst] = useState(user.instagram || "");
-
-  const [oldPass, setOldPass] = useState("");
-  const [newPass, setNewPass] = useState("");
-
-  const [msg, setMsg] = useState("");
-
-  const saveInfo = () => {
-    const updated = { ...user, name, phone, instagram: inst };
-    updateUser(updated);
-    saveCurrentUser(updated);
-    setMsg("Данные обновлены");
-  };
-
-  const savePassword = () => {
-    if (oldPass !== (user.password||'')) {
-      setMsg("Старый пароль неверный");
-      return;
-    }
-    if (newPass.length < 4) {
-      setMsg("Новый пароль слишком короткий");
-      return;
-    }
-
-    const updated = { ...user, password: newPass };
-    updateUser(updated);
-    saveCurrentUser(updated);
-    setMsg("Пароль изменён");
-    setOldPass(""); setNewPass("");
-  };
-
-  return (
-    <div className="card">
-      <h2>Мой профиль</h2>
-
-      <label>Имя</label>
-      <input value={name} onChange={(e) => setName(e.target.value)} />
-
-      <label>Телефон</label>
-      <input value={phone} onChange={(e) => setPhone(e.target.value)} />
-
-      <label>Instagram</label>
-      <input value={inst} onChange={(e) => setInst(e.target.value)} />
-
-      <button onClick={saveInfo}>Сохранить</button>
-
-      <h3>Смена пароля</h3>
-
-      <input
-        type="password"
-        placeholder="Старый пароль"
-        value={oldPass}
-        onChange={(e) => setOldPass(e.target.value)}
-      />
-
-      <input
-        type="password"
-        placeholder="Новый пароль"
-        value={newPass}
-        onChange={(e) => setNewPass(e.target.value)}
-      />
-
-      <button onClick={savePassword}>Изменить пароль</button>
-
-      {msg && <p className="success">{msg}</p>}
-    </div>
-  );
-}
+import React, { useState } from 'react'
+import { getCurrentUser, updateUser, saveCurrentUser } from '../utils/storage'
+export default function Profile(){
+  const me = getCurrentUser()
+  if(!me){ return <div className='card'><h3>Мой профиль</h3><p className='muted'>Войдите, чтобы редактировать профиль.</p></div> }
+  const [name,setName] = useState(me.name||'')
+  const [phone,setPhone] = useState(me.phone||'')
+  const [instagram,setInstagram] = useState(me.instagram||'')
+  const [oldPass,setOldPass] = useState('')
+  const [newPass,setNewPass] = useState('')
+  const [msg,setMsg] = useState('')
+  const saveInfo = ()=>{ const u = { ...me, name, phone, instagram }; updateUser(u); saveCurrentUser(u); setMsg('Данные обновлены') }
+  const changePassword = ()=>{
+    if(String(oldPass)!==String(me.password||'')){ setMsg('Старый пароль неверный'); return }
+    if((newPass||'').length<4){ setMsg('Новый пароль слишком короткий'); return }
+    const u = { ...me, password:newPass }; updateUser(u); saveCurrentUser(u); setMsg('Пароль изменён'); setOldPass(''); setNewPass('')
+  }
+  return (<div className='card'><h3>Мой профиль</h3>
+    <label>Имя</label><input value={name} onChange={e=>setName(e.target.value)} />
+    <label>Телефон</label><input value={phone} onChange={e=>setPhone(e.target.value)} />
+    <label>Instagram</label><input value={instagram} onChange={e=>setInstagram(e.target.value)} />
+    <button onClick={saveInfo}>Сохранить</button>
+    <h4>Смена пароля</h4>
+    <input type='password' placeholder='Старый пароль' value={oldPass} onChange={e=>setOldPass(e.target.value)} />
+    <input type='password' placeholder='Новый пароль' value={newPass} onChange={e=>setNewPass(e.target.value)} />
+    <button onClick={changePassword}>Изменить пароль</button>
+    {msg && <p className='success'>{msg}</p>}
+  </div>) }
