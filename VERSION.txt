@@ -1,7 +1,4 @@
-IZ Booking v8.2.0
-- Forgot Password shows temp password on screen (+ optional email)
-- Profile edit + password change
-- Admin-only reset log (Irina/Vladislav)
-- Calendar preserved
-
-Fixed: moved resetlog return inside Admin() function.
+IZ Booking v7.6
+- Client notifications (approved/canceled) with 'notified' flag
+- Admin triggers sendEmail() stub and resets notified:false
+- i18n keys for notifications
