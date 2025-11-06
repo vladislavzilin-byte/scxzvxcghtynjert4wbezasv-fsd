@@ -9,7 +9,6 @@ export default function MyBookings(){
   
 const user = getCurrentUser()
 
-  // Profile summary
   const profileCard = user ? (
     <div className="card" style={{marginBottom:16}}>
       <h3>{t('my_profile')}</h3>
@@ -18,8 +17,6 @@ const user = getCurrentUser()
     </div>
   ) : null
 
-  const [filter,setFilter] = useState('all')
-  const [confirmId, setConfirmId] = useState(null)
   const [version, setVersion] = useState(0) // trigger re-read
   const bookingsAll = getBookings()
 
@@ -78,6 +75,7 @@ React.useEffect(()=>{
 
   return (
     {profileCard}
+    
     <div className="row">
       <div className="col">
         <div className="card">
@@ -106,6 +104,7 @@ React.useEffect(()=>{
                 const canCancel = (b.status==='pending' || b.status==='approved') && new Date(b.start)>new Date()
                 return (
     {profileCard}
+    
                   <tr key={b.id} style={{opacity: b.status==='approved' ? 1 : .9}}>
                     <td>{fmtDate(b.start)}</td>
                     <td>{fmtTime(b.start)}–{fmtTime(b.end)}</td>
