@@ -101,15 +101,6 @@ React.useEffect(()=>{
     <div className="row">
       <div className="col">
         <div className="card">
-          <h3 style={{marginTop:0}}>{t('my_profile')}</h3>
-          <div><b>{user.name}</b></div>
-          <div><small className="muted">{user.phone}{user.email ? ' • '+user.email : ''}{user.instagram ? ' • '+user.instagram : ''}</small></div>
-          <div className="hr" />
-          <div className="badge">{t('you_have_x_active', { n: activeCount })}</div>
-        </div>
-      </div>
-      <div className="col">
-        <div className="card">
           
         <div className="card" style={{marginBottom:16}}>
           <h3 style={{marginTop:0}}>Мой профиль</h3>
