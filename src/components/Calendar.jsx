@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   addDays, addMonths, isSameMonth, isSameDay, format
@@ -10,11 +10,8 @@ import {
 import { useI18n } from '../lib/i18n'
 
 function dayISO(d){ return new Date(d).toISOString().slice(0,10) }
-
-// ✅ Fix: normalizing dates (removes time)
-function toDateOnly(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
+// нормализация даты (без времени)
+function toDateOnly(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()) }
 
 export default function Calendar(){
   const { t } = useI18n()
@@ -27,6 +24,11 @@ export default function Calendar(){
   const [bookedISO, setBookedISO] = useState([])
   const [modal, setModal] = useState(null)
 
+  // UI состояния
+  const [hoverIdx, setHoverIdx] = useState(-1)
+  const [animDir, setAnimDir] = useState(0) // -1 влево, +1 вправо
+  const touchStartX = useRef(null)
+
   const minDate = new Date()
   const maxDate = addMonths(new Date(), 24)
 
@@ -37,7 +39,7 @@ export default function Calendar(){
 
   const days = useMemo(()=>{
     const arr=[]; let d=gridStart; while(d<=gridEnd){ arr.push(d); d=addDays(d,1) } return arr
-  }, [currentMonth])
+  }, [currentMonth]) // пересчитываем по месяцу
 
   const bookings = getBookings()
 
@@ -85,85 +87,159 @@ export default function Calendar(){
       createdAt: new Date().toISOString()
     }
 
-    saveBookings([ ...bookings, newB ])
-    setBookedISO(prev => [...prev, new Date(tSel)])
-    setBusy(false)
-    setProcessingISO(null)
-    setModal({
-      title: t('booked_success'),
-      dateStr: format(tSel,'dd.MM.yyyy'),
-      timeStr: format(tSel,'HH:mm')+' – '+format(end,'HH:mm'),
-      caption: t('wait_confirmation')+' '+t('details_in_my')
-    })
+    // имитация короткого процесса (лоудер видно)
+    setTimeout(()=>{
+      saveBookings([ ...bookings, newB ])
+      setBookedISO(prev => [...prev, new Date(tSel)])
+      setBusy(false)
+      setProcessingISO(null)
+      setModal({
+        title: t('booked_success'),
+        dateStr: format(tSel,'dd.MM.yyyy'),
+        timeStr: format(tSel,'HH:mm')+' – '+format(end,'HH:mm'),
+        caption: t('wait_confirmation')+' '+t('details_in_my')
+      })
+    }, 600)
   }
 
   const closeModal = () => setModal(null)
 
-  // ───────────────────────────
-  // Aurora-навигация календаря
-  // ───────────────────────────
+  // Листание месяцев
+  const goPrev = () => { setAnimDir(-1); setCurrentMonth(m => addMonths(m,-1)) }
+  const goNext = () => { setAnimDir(+1); setCurrentMonth(m => addMonths(m, 1)) }
 
-  const navBtnStyle = {
-    width: 130,
-    height: 46,
-    borderRadius: 14,
-    border: '1px solid rgba(168,85,247,0.40)',
-    background: 'rgba(31, 0, 63, 0.55)',
-    backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)',
-    color: '#fff',
-    fontSize: 22,
-    cursor: 'pointer',
-    transition: '0.25s',
-    boxShadow: '0 0 18px rgba(138,43,226,0.25)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    userSelect: 'none'
+  // Свайп по месяцу
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX }
+  const onTouchEnd = (e) => {
+    if(touchStartX.current == null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if(Math.abs(dx) > 50){
+      if(dx > 0) goPrev(); else goNext();
+    }
+    touchStartX.current = null
   }
 
-  const centerPillStyle = {
-    width: 130,
-    height: 46,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 14,
-    border: '1px solid rgba(168,85,247,0.40)',
-    background: 'linear-gradient(145deg, rgba(66,0,145,0.55), rgba(20,0,40,0.60))',
-    backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)',
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: 600,
-    textAlign: 'center',
-    boxShadow: '0 0 18px rgba(138,43,226,0.25)',
-    letterSpacing: '0.5px'
-  }
-
+  // Метки
   const monthLabelRaw = format(currentMonth,'LLLL yyyy')
   const monthLabel = monthLabelRaw.charAt(0).toUpperCase()+monthLabelRaw.slice(1)
 
+  // Стили (Aurora / Glass)
+  const navBtnStyle = {
+    width: 130, height: 46, borderRadius: 14,
+    border: '1px solid rgba(168,85,247,0.40)',
+    background: 'rgba(31, 0, 63, 0.55)',
+    backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+    color: '#fff', fontSize: 22, cursor: 'pointer', transition: '0.25s',
+    boxShadow: '0 0 18px rgba(138,43,226,0.25)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none'
+  }
+
+  const centerPillStyle = {
+    width: 130, height: 46, borderRadius: 14,
+    display: 'flex', justifyContent: 'center', alignItems: 'center',
+    border: '1px solid rgba(168,85,247,0.40)',
+    background: 'linear-gradient(145deg, rgba(66,0,145,0.55), rgba(20,0,40,0.60))',
+    backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+    color: '#fff', fontSize: 15, fontWeight: 600, textAlign: 'center',
+    boxShadow: '0 0 18px rgba(138,43,226,0.25)', letterSpacing: '0.5px'
+  }
+
+  // UI хелперы
+  const isToday = (d) => isSameDay(toDateOnly(d), toDateOnly(new Date()))
+  const dateCellStyle = (d, idx, active) => {
+    const base = {
+      borderRadius: 12,
+      padding: '10px 0',
+      textAlign: 'center',
+      transition: '0.2s',
+      userSelect: 'none'
+    }
+    // Aurora hover
+    if(hoverIdx === idx){
+      base.boxShadow = '0 0 18px rgba(168,85,247,0.40)'
+      base.background = 'rgba(98,0,180,0.18)'
+      base.transform = 'translateY(-1px)'
+    }
+    // выбранная дата — фиолетовый glow
+    if(active){
+      base.boxShadow = '0 0 24px rgba(168,85,247,0.55), 0 0 0 1px rgba(168,85,247,0.55) inset'
+      base.background = 'rgba(98,0,180,0.22)'
+      base.fontWeight = 700
+    }
+    // сегодня — тонкий ободок
+    if(isToday(d) && !active){
+      base.boxShadow = '0 0 0 1px rgba(168,85,247,0.45) inset'
+    }
+    return base
+  }
+
+  const slotBtnStyle = (disabledLike) => ({
+    borderRadius: 10,
+    padding: '8px 12px',
+    border: '1px solid ' + (disabledLike ? 'rgba(180,180,200,0.25)' : 'rgba(168,85,247,0.45)'),
+    background: disabledLike ? 'rgba(255,255,255,0.06)' : 'rgba(98,0,180,0.18)',
+    color: '#fff',
+    cursor: disabledLike ? 'default' : 'pointer',
+    backdropFilter: 'blur(6px)',
+    transition: '0.2s'
+  })
+
   return (
-    <div className="card">
+    <div className="card" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      {/* встроенные стили/анимации для самодостаточности */}
+      <style>{`
+        @keyframes fadeSlideLeft { from{opacity:.0; transform: translateX(12px)} to{opacity:1; transform: translateX(0)} }
+        @keyframes fadeSlideRight{ from{opacity:.0; transform: translateX(-12px)} to{opacity:1; transform: translateX(0)} }
+        @keyframes spin { to{ transform: rotate(360deg); } }
+        .month-enter-left { animation: fadeSlideLeft .35s ease both; }
+        .month-enter-right{ animation: fadeSlideRight .35s ease both; }
+
+        /* модалка премиум */
+        .modal-backdrop {
+          position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+          display:flex; align-items:center; justify-content:center; z-index: 9999;
+          backdrop-filter: blur(2px);
+        }
+        .modal {
+          background: rgba(17, 0, 40, 0.65);
+          border: 1px solid rgba(168,85,247,0.35);
+          border-radius: 16px; padding: 20px; color: #fff;
+          box-shadow: 0 8px 32px rgba(120,0,255,0.35);
+          min-width: 280px;
+          animation: fadeSlideLeft .25s ease both;
+        }
+        .loader {
+          width: 18px; height: 18px; border-radius: 50%;
+          border: 2px solid rgba(255,255,255,0.25);
+          border-top-color: rgba(168,85,247,0.9);
+          animation: spin .8s linear infinite;
+          display:inline-block; vertical-align:middle;
+        }
+      `}</style>
 
       {/* NAVIGATION */}
       <div style={{display:'flex',gap:16,alignItems:'center',justifyContent:'center',marginBottom:12}}>
-
         <button
           style={navBtnStyle}
-          onClick={()=>setCurrentMonth(addMonths(currentMonth,-1))}
+          onClick={goPrev}
+          onMouseDown={e=>e.currentTarget.style.background='rgba(31,0,63,0.7)'}
+          onMouseUp={e=>e.currentTarget.style.background='rgba(31,0,63,0.55)'}
         >
           ←
         </button>
 
-        <div style={centerPillStyle}>
+        <div
+          style={centerPillStyle}
+          className={animDir<0 ? 'month-enter-right' : animDir>0 ? 'month-enter-left' : ''}
+        >
           {monthLabel}
         </div>
 
         <button
           style={navBtnStyle}
-          onClick={()=>setCurrentMonth(addMonths(currentMonth,1))}
+          onClick={goNext}
+          onMouseDown={e=>e.currentTarget.style.background='rgba(31,0,63,0.7)'}
+          onMouseUp={e=>e.currentTarget.style.background='rgba(31,0,63,0.55)'}
         >
           →
         </button>
@@ -172,32 +248,34 @@ export default function Calendar(){
       <div className="hr" />
 
       {/* GRID */}
-      <div className="grid">
-        {['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((w,i)=>(
-          <div key={i} className="muted" style={{textAlign:'center',fontWeight:600}}>{w}</div>
-        ))}
+      <div className={animDir<0 ? 'month-enter-right' : animDir>0 ? 'month-enter-left' : ''}>
+        <div className="grid">
+          {['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((w,i)=>(
+            <div key={i} className="muted" style={{textAlign:'center',fontWeight:600}}>{w}</div>
+          ))}
 
-        {days.map((d,idx)=>{
-          const inMonth = isSameMonth(d,monthStart)
-          const active  = isSameDay(d,selectedDate)
-
-          // ✅ FIXED — now date selection works
-          const disabled = toDateOnly(d) < toDateOnly(minDate) || toDateOnly(d) > toDateOnly(maxDate)
-
-          return (
-            <div
-              key={idx}
-              className={'datebtn '+(active?'active':'')}
-              onClick={()=>!disabled&&setSelectedDate(d)}
-              style={{
-                opacity: inMonth?1:.4,
-                cursor: disabled?'default':'pointer'
-              }}
-            >
-              {format(d,'d')}
-            </div>
-          )
-        })}
+          {days.map((d,idx)=>{
+            const inMonth = isSameMonth(d,monthStart)
+            const active  = isSameDay(d,selectedDate)
+            const disabled = toDateOnly(d) < toDateOnly(minDate) || toDateOnly(d) > toDateOnly(maxDate)
+            return (
+              <div
+                key={idx}
+                className={'datebtn'+(active?' active':'')}
+                onMouseEnter={()=>setHoverIdx(idx)}
+                onMouseLeave={()=>setHoverIdx(-1)}
+                onClick={()=>!disabled&&setSelectedDate(d)}
+                style={{
+                  ...dateCellStyle(d, idx, active),
+                  opacity: inMonth?1:.4,
+                  cursor: disabled?'default':'pointer'
+                }}
+              >
+                {format(d,'d')}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       <div className="hr" />
@@ -210,6 +288,8 @@ export default function Calendar(){
             const taken = isTaken(ti)
             const isProcessing = processingISO && isSameMinute(processingISO, ti)
             const isLocal = bookedISO.some(x => isSameMinute(x, ti))
+            const disabledLike = taken || busy || isProcessing
+
             let label = format(ti,'HH:mm')
             if(isProcessing) label = t('processing')
             else if(taken || isLocal) label = t('reserved_label')
@@ -217,11 +297,14 @@ export default function Calendar(){
             return (
               <button
                 key={ti.toISOString()}
-                disabled={taken||busy||isProcessing}
+                disabled={disabledLike}
                 className={(taken||isLocal)?'ghost':'ok'}
                 onClick={()=>book(ti)}
+                style={slotBtnStyle(disabledLike)}
+                onMouseEnter={e=>{ if(!disabledLike) e.currentTarget.style.background='rgba(98,0,180,0.26)' }}
+                onMouseLeave={e=>{ if(!disabledLike) e.currentTarget.style.background='rgba(98,0,180,0.18)' }}
               >
-                {label}
+                {busy && isProcessing ? (<span className="loader" />) : label}
               </button>
             )
           })}
@@ -235,11 +318,18 @@ export default function Calendar(){
       {modal && (
         <div className="modal-backdrop" onClick={closeModal}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
-            <h3>{modal.title}</h3>
-            {modal.dateStr && <p style={{margin:'6px 0'}}>{modal.dateStr}</p>}
+            <h3 style={{marginTop:0}}>{modal.title}</h3>
+            {modal.dateStr && <p style={{margin:'6px 0', opacity:.9}}>{modal.dateStr}</p>}
             {modal.timeStr && <p style={{margin:'6px 0', fontWeight:700}}>{modal.timeStr}</p>}
-            {modal.caption && <p style={{margin:'6px 0'}}>{modal.caption}</p>}
-            <div style={{marginTop:12}}><button onClick={closeModal}>OK</button></div>
+            {modal.caption && <p style={{margin:'6px 0', opacity:.95}}>{modal.caption}</p>}
+            <div style={{marginTop:14, textAlign:'right'}}>
+              <button onClick={closeModal} style={{
+                borderRadius:10, padding:'8px 14px',
+                border:'1px solid rgba(168,85,247,0.45)',
+                background:'rgba(98,0,180,0.18)', color:'#fff',
+                backdropFilter:'blur(6px)', cursor:'pointer'
+              }}>OK</button>
+            </div>
           </div>
         </div>
       )}
