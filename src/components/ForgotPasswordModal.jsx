@@ -14,7 +14,7 @@ export default function ForgotPasswordModal({ open, onClose }){
   }
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={e=>e.stopPropagation()}>
+      <div className="modal-overlay" style={{position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.6)",zIndex:9999,display:"flex",justifyContent:"center",alignItems:"center"}} onClick={e=>e.stopPropagation()}>
         <h3>Восстановление пароля</h3>
         <form onSubmit={submit} style={{marginTop:10}}>
           <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+3706..."/>
