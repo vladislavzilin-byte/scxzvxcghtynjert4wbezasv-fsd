@@ -11,6 +11,11 @@ import { useI18n } from '../lib/i18n'
 
 function dayISO(d){ return new Date(d).toISOString().slice(0,10) }
 
+// ✅ Fix: normalizing dates (removes time)
+function toDateOnly(d){
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
 export default function Calendar(){
   const { t } = useI18n()
   const settings = getSettings()
@@ -49,7 +54,7 @@ export default function Calendar(){
     }
     const blocked = settings.blockedDates.includes(dayISO(d))
     if(blocked) return []
-    if(d < new Date(minDate.toDateString()) || d > maxDate) return []
+    if(toDateOnly(d) < toDateOnly(minDate) || toDateOnly(d) > toDateOnly(maxDate)) return []
     return slots
   }
 
@@ -148,7 +153,6 @@ export default function Calendar(){
         <button
           style={navBtnStyle}
           onClick={()=>setCurrentMonth(addMonths(currentMonth,-1))}
-          aria-label="prev-month"
         >
           ←
         </button>
@@ -160,11 +164,9 @@ export default function Calendar(){
         <button
           style={navBtnStyle}
           onClick={()=>setCurrentMonth(addMonths(currentMonth,1))}
-          aria-label="next-month"
         >
           →
         </button>
-
       </div>
 
       <div className="hr" />
@@ -178,7 +180,10 @@ export default function Calendar(){
         {days.map((d,idx)=>{
           const inMonth = isSameMonth(d,monthStart)
           const active  = isSameDay(d,selectedDate)
-          const disabled = d < new Date(minDate.toDateString()) || d > maxDate
+
+          // ✅ FIXED — now date selection works
+          const disabled = toDateOnly(d) < toDateOnly(minDate) || toDateOnly(d) > toDateOnly(maxDate)
+
           return (
             <div
               key={idx}
@@ -186,7 +191,7 @@ export default function Calendar(){
               onClick={()=>!disabled&&setSelectedDate(d)}
               style={{
                 opacity: inMonth?1:.4,
-                pointerEvents: disabled?'none':'auto'
+                cursor: disabled?'default':'pointer'
               }}
             >
               {format(d,'d')}
