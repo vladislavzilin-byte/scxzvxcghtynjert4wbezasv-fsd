@@ -1,10 +1,29 @@
 import React from 'react'
 
 import { useMemo, useState } from 'react'
-import { getCurrentUser, getBookings, saveBookings, fmtDate, fmtTime } from '../lib/storage'
+import { getCurrentUser, getBookings, saveBookings, fmtDate, fmtTime, getUsers, saveUsers, setCurrentUser } from '../lib/storage'
 import { useI18n } from '../lib/i18n'
 
-export default function MyBookings(){
+export default function MyBoo
+  const [form, setForm] = useState({
+    name: user?.name || '',
+    instagram: user?.instagram || '',
+    phone: user?.phone || '',
+    email: user?.email || '',
+    password: user?.password || ''
+  });
+
+  const saveProfile = (e)=>{
+    e.preventDefault();
+    const users = getUsers();
+    const idx = users.findIndex(u => u.phone === user.phone);
+    const updated = {...user, ...form};
+    if(idx>=0) users[idx] = updated;
+    saveUsers(users);
+    setCurrentUser(updated);
+    alert(t('profile_saved'));
+  };
+kings(){
   const { t } = useI18n()
   const user = getCurrentUser()
   const [filter,setFilter] = useState('all')
@@ -77,26 +96,34 @@ React.useEffect(()=>{
         </div>
       </div>
       <div className="col">
-        <div className="card" style={{marginBottom:16}}>
-          <h3 style={{marginTop:0}}>{t('my_profile')}</h3>
-          <form className="col" style={{gap:12}}>
-            <div>
-              <label>{t('name')}</label>
-              <input value={user.name}/>
-            </div>
-            <div>
-              <label>Instagram</label>
-              <input value={user.instagram}/>
-            </div>
-            <div>
-              <label>{t('phone')}</label>
-              <input value={user.phone}/>
-            </div>
-            <div>
-              <label>Email</label>
-              <input value={user.email}/>
-            </div>
-          </form>
+        
+<div className="card" style={{marginBottom:16}}>
+  <h3 style={{marginTop:0}}>{t('my_profile')}</h3>
+  <form className="col" style={{gap:12}} onSubmit={saveProfile}>
+    <div>
+      <label>{t('name')}</label>
+      <input value={form.name} onChange={e=>setForm({...form, name:e.target.value})}/>
+    </div>
+    <div>
+      <label>Instagram</label>
+      <input value={form.instagram} onChange={e=>setForm({...form, instagram:e.target.value})}/>
+    </div>
+    <div>
+      <label>{t('phone')}</label>
+      <input value={form.phone} onChange={e=>setForm({...form, phone:e.target.value})}/>
+    </div>
+    <div>
+      <label>Email</label>
+      <input value={form.email} onChange={e=>setForm({...form, email:e.target.value})}/>
+    </div>
+    <div>
+      <label>{t('password')}</label>
+      <input type="password" value={form.password} onChange={e=>setForm({...form, password:e.target.value})}/>
+    </div>
+    <button type="submit">{t('save')}</button>
+  </form>
+</div>
+
         </div>
       </div>
 
