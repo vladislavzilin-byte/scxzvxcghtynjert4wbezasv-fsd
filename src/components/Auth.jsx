@@ -1,253 +1,364 @@
-import React, { useState } from 'react'
-import { useI18n } from '../lib/i18n'
+import React, { useState } from 'react';
+import { useI18n } from '../lib/i18n';
 import {
   loginUser,
   registerUser,
-  findUserByPhone,
   findUserByEmail,
+  findUserByLogin,
   getCurrentUser
-} from '../utils/storage'
+} from '../utils/storage';
 
 export default function Auth() {
-  const { t } = useI18n()
+  const { t } = useI18n();
 
-  const [mode, setMode] = useState('login')
-  const [phoneOrEmail, setPhoneOrEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  // UI state
+  const [mode, setMode] = useState('login'); // login | register
+  const [phoneOrEmail, setPhoneOrEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [regName, setRegName] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
 
-  const [recoverOpen, setRecoverOpen] = useState(false)
-  const [recoverPhone, setRecoverPhone] = useState('')
-  const [recoverPass, setRecoverPass] = useState(null)
+  // Recovery
+  const [showRecover, setShowRecover] = useState(false);
+  const [recoverPhone, setRecoverPhone] = useState('');
+  const [recoveredPass, setRecoveredPass] = useState('');
+  const [showPass, setShowPass] = useState(false);
 
-  // ──────────────────────────────
-  //      LOGIN / REGISTER
-  // ──────────────────────────────
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
+  // ---------------------------------------------------------
+  // LOGIN
+  // ---------------------------------------------------------
+  const doLogin = () => {
     if (!phoneOrEmail.trim() || !password.trim()) {
-      alert(t('fill_all'))
-      return
+      alert(t('fill_all_fields'));
+      return;
     }
 
-    if (mode === 'login') {
-      const user =
-        findUserByPhone(phoneOrEmail.trim()) ||
-        findUserByEmail(phoneOrEmail.trim())
+    const user =
+      findUserByLogin(phoneOrEmail.trim()) ||
+      findUserByEmail(phoneOrEmail.trim());
 
-      if (!user) {
-        // ✅ 3. Автопереход в регистрацию
-        alert(t('no_account_switch_register'))
-        setMode('register')
-        return
-      }
-
-      const ok = loginUser(user.phone, password)
-      if (!ok) {
-        alert(t('wrong_login'))
-        return
-      }
-      window.location.reload()
-      return
-    }
-
-    if (mode === 'register') {
-      const exists =
-        findUserByPhone(phoneOrEmail.trim()) ||
-        findUserByEmail(phoneOrEmail.trim())
-
-      if (exists) {
-        alert(t('already_exists'))
-        return
-      }
-
-      registerUser({
-        phone: phoneOrEmail.trim(),
-        email: phoneOrEmail.trim().includes('@') ? phoneOrEmail.trim() : '',
-        password
-      })
-
-      alert(t('registered_success'))
-      setMode('login')
-      return
-    }
-  }
-
-  // ──────────────────────────────
-  //       PASSWORD RECOVERY
-  // ──────────────────────────────
-  const openRecovery = () => {
-    setRecoverPhone('')
-    setRecoverPass(null)
-    setRecoverOpen(true)
-  }
-
-  const handleRecovery = () => {
-    const user = findUserByPhone(recoverPhone.trim())
     if (!user) {
-      alert(t('user_not_found'))
-      return
+      alert(t('wrong_login_or_pass'));
+      return;
     }
-    setRecoverPass(user.password)
-  }
 
-  // ──────────────────────────────
-  //             UI
-  // ──────────────────────────────
-  const tabStyle = (active) => ({
-    padding: '14px',
-    textAlign: 'center',
-    flex: 1,
-    borderRadius: '12px',
-    cursor: 'pointer',
-    transition: '0.3s',
-    fontWeight: 600,
-    background: active
-      ? 'linear-gradient(90deg, rgba(120,45,245,0.55), rgba(90,20,200,0.50))'
-      : 'rgba(255,255,255,0.05)',
-    border: active
-      ? '1px solid rgba(170,70,255,0.55)'
-      : '1px solid rgba(255,255,255,0.07)',
-    color: active ? '#fff' : '#bbb',
-    backdropFilter: 'blur(10px)'
-  })
+    if (user.password !== password.trim()) {
+      alert(t('wrong_login_or_pass'));
+      return;
+    }
 
-  const inputStyle = {
+    loginUser(user.id);
+    window.location.reload();
+  };
+
+  // ---------------------------------------------------------
+  // REGISTER
+  // ---------------------------------------------------------
+  const doRegister = () => {
+    if (!regName || !regPhone || !regEmail || !regPassword) {
+      alert(t('fill_all_fields'));
+      return;
+    }
+
+    registerUser({
+      name: regName.trim(),
+      phone: regPhone.trim(),
+      email: regEmail.trim(),
+      password: regPassword.trim(),
+    });
+
+    alert(t('register_success'));
+    setMode('login');
+  };
+
+  // ---------------------------------------------------------
+  // RECOVER PASSWORD (BY PHONE)
+  // ---------------------------------------------------------
+  const doRecover = () => {
+    const user = findUserByLogin(recoverPhone.trim());
+
+    if (!user) {
+      alert('Номер не найден');
+      return;
+    }
+
+    setRecoveredPass(user.password);
+  };
+
+  // ---------------------------------------------------------
+  // LOGOUT
+  // ---------------------------------------------------------
+  const logout = () => {
+    localStorage.removeItem('currentUser');
+    window.location.reload();
+  };
+
+  const currentUser = getCurrentUser();
+
+  // ---------------------------------------------------------
+  // STYLES (Aurora UI)
+  // ---------------------------------------------------------
+  const fieldStyle = {
     width: '100%',
-    padding: '14px',
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.15)',
-    borderRadius: '12px',
+    padding: '12px 16px',
+    borderRadius: '10px',
+    border: '1px solid rgba(168,85,247,0.45)',
+    background: 'rgba(20,0,40,0.45)',
     color: '#fff',
-    fontSize: '15px',
-    outline: 'none'
+    fontSize: '14px',
+    outline: 'none',
+    marginBottom: '12px',
+  };
+
+  const buttonStyle = {
+    width: '100%',
+    padding: '12px',
+    borderRadius: '12px',
+    background: 'linear-gradient(135deg, #7b2ff7, #4b00e0)',
+    border: '1px solid rgba(168,85,247,0.4)',
+    color: '#fff',
+    fontWeight: 600,
+    cursor: 'pointer',
+    marginTop: '4px',
+    boxShadow: '0 0 14px rgba(138,43,226,0.25)',
+  };
+
+  const smallBtn = {
+    ...buttonStyle,
+    width: '50%',
+    padding: '10px',
+    fontSize: '13px',
+  };
+
+  // ---------------------------------------------------------
+  // RETURN
+  // ---------------------------------------------------------
+
+  // ✅ Already logged in → show profile header
+  if (currentUser) {
+    return (
+      <div
+        style={{
+          marginTop: 20,
+          padding: 24,
+          borderRadius: 20,
+          background: 'linear-gradient(135deg, rgba(40,0,80,0.45), rgba(15,0,35,0.55))',
+          border: '1px solid rgba(168,85,247,0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 20,
+        }}
+      >
+        {/* Avatar */}
+        <div
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: 16,
+            background: 'rgba(66,0,145,0.5)',
+            border: '1px solid rgba(168,85,247,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 700,
+            fontSize: 20,
+            color: '#fff',
+            backdropFilter: 'blur(6px)',
+          }}
+        >
+          {currentUser.name
+            .split(' ')
+            .map((w) => w[0])
+            .join('')
+            .toUpperCase()}
+        </div>
+
+        {/* Info */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 19, fontWeight: 700 }}>{currentUser.name}</div>
+          <div style={{ fontSize: 14, opacity: 0.8 }}>📞 {currentUser.phone}</div>
+          <div style={{ fontSize: 14, opacity: 0.8 }}>📧 {currentUser.email}</div>
+          {currentUser.instagram && (
+            <div style={{ fontSize: 14, opacity: 0.8 }}>📸 {currentUser.instagram}</div>
+          )}
+        </div>
+
+        {/* Logout */}
+        <button onClick={logout} style={smallBtn}>
+          {t('logout')}
+        </button>
+      </div>
+    );
   }
 
+  // ✅ Not logged in → show login screen
   return (
-    <div className="card">
-
-      {/* ─────────────── Tabs ─────────────── */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-        <div style={tabStyle(mode === 'login')} onClick={() => setMode('login')}>
+    <div style={{ marginTop: 20 }}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          style={{
+            ...buttonStyle,
+            background: mode === 'login'
+              ? 'linear-gradient(135deg, #7b2ff7, #4b00e0)'
+              : 'rgba(20,0,40,0.45)',
+            width: '50%',
+          }}
+          onClick={() => setMode('login')}
+        >
           {t('login')}
-        </div>
-        <div
-          style={tabStyle(mode === 'register')}
+        </button>
+
+        <button
+          style={{
+            ...buttonStyle,
+            background: mode === 'register'
+              ? 'linear-gradient(135deg, #7b2ff7, #4b00e0)'
+              : 'rgba(20,0,40,0.45)',
+            width: '50%',
+          }}
           onClick={() => setMode('register')}
         >
           {t('register')}
-        </div>
+        </button>
       </div>
 
-      {/* ─────────────── FORM ─────────────── */}
-      <form onSubmit={handleSubmit}>
-
-        <label className="muted">{t('phone_or_email')}</label>
-        <input
-          style={inputStyle}
-          value={phoneOrEmail}
-          onChange={(e) => setPhoneOrEmail(e.target.value)}
-        />
-
-        <label className="muted" style={{ marginTop: 12 }}>
-          {t('password')}
-        </label>
-
-        {/* PASSWORD + SHOW BUTTON */}
-        <div style={{ position: 'relative' }}>
+      {/* Login form */}
+      {mode === 'login' && (
+        <div style={{ marginTop: 20 }}>
           <input
-            type={showPassword ? 'text' : 'password'}
-            style={inputStyle}
+            placeholder="Телефон или Email"
+            style={fieldStyle}
+            value={phoneOrEmail}
+            onChange={(e) => setPhoneOrEmail(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Пароль"
+            style={fieldStyle}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {/* ✅ 1. Показать пароль */}
-          <span
-            onClick={() => setShowPassword(!showPassword)}
-            style={{
-              position: 'absolute',
-              right: 14,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              cursor: 'pointer',
-              color: '#ccc',
-              fontSize: 13
-            }}
-          >
-            {showPassword ? t('hide') : t('show')}
-          </span>
-        </div>
+          <button style={buttonStyle} onClick={doLogin}>
+            {t('login')}
+          </button>
 
-        {/* ✅ 2. Забыли пароль? */}
-        {mode === 'login' && (
           <div
             style={{
-              marginTop: 6,
-              textAlign: 'right',
+              marginTop: 10,
+              textAlign: 'center',
               cursor: 'pointer',
-              color: '#9f7fff',
-              fontSize: 13
+              opacity: 0.8,
             }}
-            onClick={openRecovery}
+            onClick={() => setShowRecover(true)}
           >
-            {t('forgot_password')}
+            Забыли пароль?
           </div>
-        )}
+        </div>
+      )}
 
-        <button
-          type="submit"
+      {/* Register form */}
+      {mode === 'register' && (
+        <div style={{ marginTop: 20 }}>
+          <input
+            placeholder="Имя"
+            style={fieldStyle}
+            value={regName}
+            onChange={(e) => setRegName(e.target.value)}
+          />
+
+          <input
+            placeholder="Телефон"
+            style={fieldStyle}
+            value={regPhone}
+            onChange={(e) => setRegPhone(e.target.value)}
+          />
+
+          <input
+            placeholder="Email"
+            style={fieldStyle}
+            value={regEmail}
+            onChange={(e) => setRegEmail(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Пароль"
+            style={fieldStyle}
+            value={regPassword}
+            onChange={(e) => setRegPassword(e.target.value)}
+          />
+
+          <button style={buttonStyle} onClick={doRegister}>
+            {t('register')}
+          </button>
+        </div>
+      )}
+
+      {/* Recover modal */}
+      {showRecover && (
+        <div
           style={{
-            width: '100%',
-            marginTop: 18,
-            padding: '14px',
-            borderRadius: '12px',
-            background: 'linear-gradient(90deg, #7b2ff7, #6a12d9)',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: 16
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 2000,
           }}
+          onClick={() => setShowRecover(false)}
         >
-          {t('login')}
-        </button>
-      </form>
-
-      {/* ─────────────── RECOVERY MODAL ─────────────── */}
-      {recoverOpen && (
-        <div className="modal-backdrop" onClick={() => setRecoverOpen(false)}>
           <div
-            className="modal"
+            style={{
+              width: 320,
+              padding: 24,
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, rgba(40,0,80,0.65), rgba(20,0,50,0.65))',
+              border: '1px solid rgba(168,85,247,0.45)',
+            }}
             onClick={(e) => e.stopPropagation()}
-            style={{ textAlign: 'center' }}
           >
-            <h3>{t('recover_title')}</h3>
+            <h3>Восстановление пароля</h3>
 
             <input
-              style={{ ...inputStyle, marginTop: 12 }}
-              placeholder={t('enter_phone')}
+              placeholder="Введите телефон"
+              style={fieldStyle}
               value={recoverPhone}
               onChange={(e) => setRecoverPhone(e.target.value)}
             />
 
-            <button
-              style={{ marginTop: 12, padding: '10px 18px' }}
-              onClick={handleRecovery}
-            >
-              {t('find')}
+            <button style={buttonStyle} onClick={doRecover}>
+              Найти
             </button>
 
-            {recoverPass && (
-              <div style={{ marginTop: 14 }}>
-                <b>{t('your_password')}:</b>
-                <div style={{ marginTop: 8, fontSize: 20 }}>{recoverPass}</div>
+            {recoveredPass && (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ opacity: 0.8, marginBottom: 6 }}>Ваш пароль:</div>
+
+                <input
+                  style={fieldStyle}
+                  type={showPass ? 'text' : 'password'}
+                  value={recoveredPass}
+                  readOnly
+                />
+
+                <button
+                  style={buttonStyle}
+                  onClick={() => setShowPass(!showPass)}
+                >
+                  {showPass ? 'Скрыть' : 'Показать'}
+                </button>
               </div>
             )}
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }
