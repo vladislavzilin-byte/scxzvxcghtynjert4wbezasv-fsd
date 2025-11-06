@@ -3,7 +3,7 @@ import Auth from './components/Auth.jsx'
 import Calendar from './components/Calendar.jsx'
 import Admin from './components/Admin.jsx'
 import MyBookings from './components/MyBookings.jsx'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { getCurrentUser, getLang, setLang } from './lib/storage'
 import { useI18n, dict } from './lib/i18n'
 
@@ -11,7 +11,6 @@ export default function App(){
   const { lang, setLang, t } = useI18n()
   const [tab, setTab] = useState('calendar')
   const [user, setUser] = useState(getCurrentUser())
-  useEffect(()=>{ setUser(getCurrentUser()) },[])
 
   return (
     <div className="container">
@@ -32,8 +31,6 @@ export default function App(){
       </div>
 
       <Auth onAuth={setUser} />
-
-      
 
       {tab==='calendar' && <Calendar />}
       {tab==='my' && <MyBookings />}

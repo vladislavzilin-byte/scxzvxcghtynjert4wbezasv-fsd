@@ -4,28 +4,41 @@ import { useMemo, useState } from 'react'
 import { getCurrentUser, getBookings, saveBookings, fmtDate, fmtTime, getUsers, saveUsers, setCurrentUser } from '../lib/storage'
 import { useI18n } from '../lib/i18n'
 
-export default function MyBoo
+export default function MyBookings(){
+  const { t } = useI18n()
+  const user = getCurrentUser()
   const [form, setForm] = useState({
     name: user?.name || '',
     instagram: user?.instagram || '',
     phone: user?.phone || '',
     email: user?.email || '',
     password: user?.password || ''
-  });
+  })
+  const [errors, setErrors] = useState({})
+  const [saved, setSaved] = useState(false)
+  const [toast, setToast] = useState(null)
 
-  const saveProfile = (e)=>{
-    e.preventDefault();
-    const users = getUsers();
-    const idx = users.findIndex(u => u.phone === user.phone);
-    const updated = {...user, ...form};
-    if(idx>=0) users[idx] = updated;
-    saveUsers(users);
-    setCurrentUser(updated);
-    alert(t('profile_saved'));
-  };
-kings(){
-  const { t } = useI18n()
-  const user = getCurrentUser()
+  const validate = () => {
+    const e = {}
+    if(!form.phone && !form.email) e.contact = 'Нужен телефон или email'
+    if(form.email && !/^\S+@\S+\.\S+$/.test(form.email)) e.email = 'Некорректный email'
+    if(form.phone && !/^[+\d][\d\s\-()]{5,}$/.test(form.phone)) e.phone = 'Некорректный телефон'
+    setErrors(e)
+    return Object.keys(e).length===0
+  }
+
+  const saveProfile = (ev) => {
+    ev.preventDefault()
+    if(!validate()) return
+    const users = getUsers()
+    const idx = users.findIndex(u => (u.phone && u.phone===user.phone) || (u.email && u.email===user.email))
+    const updated = { ...user, ...form }
+    if(idx>=0) users[idx] = updated; else users.push(updated)
+    saveUsers(users)
+    setCurrentUser(updated)
+    setSaved(true); setToast('Данные сохранены')
+    setTimeout(()=>{ setSaved(false); setToast(null) }, 1500)
+  }
   const [filter,setFilter] = useState('all')
   const [confirmId, setConfirmId] = useState(null)
   const [version, setVersion] = useState(0) // trigger re-read
@@ -96,39 +109,24 @@ React.useEffect(()=>{
         </div>
       </div>
       <div className="col">
-        
-<div className="card" style={{marginBottom:16}}>
-  <h3 style={{marginTop:0}}>{t('my_profile')}</h3>
-  <form className="col" style={{gap:12}} onSubmit={saveProfile}>
-    <div>
-      <label>{t('name')}</label>
-      <input value={form.name} onChange={e=>setForm({...form, name:e.target.value})}/>
-    </div>
-    <div>
-      <label>Instagram</label>
-      <input value={form.instagram} onChange={e=>setForm({...form, instagram:e.target.value})}/>
-    </div>
-    <div>
-      <label>{t('phone')}</label>
-      <input value={form.phone} onChange={e=>setForm({...form, phone:e.target.value})}/>
-    </div>
-    <div>
-      <label>Email</label>
-      <input value={form.email} onChange={e=>setForm({...form, email:e.target.value})}/>
-    </div>
-    <div>
-      <label>{t('password')}</label>
-      <input type="password" value={form.password} onChange={e=>setForm({...form, password:e.target.value})}/>
-    </div>
-    <button type="submit">{t('save')}</button>
-  </form>
-</div>
-
-        </div>
-      </div>
-
-      <div className="col">
         <div className="card">
+          
+        <div className="card" style={{marginBottom:16}}>
+          <h3 style={{marginTop:0}}>Мой профиль</h3>
+          <form className="col" style={{gap:12}} onSubmit={saveProfile}>
+            <div><label>Имя</label><input value={form.name} onChange={e=>{ setForm({...form, name:e.target.value}); setSaved(false) }} /></div>
+            <div><label>Instagram</label><input value={form.instagram} onChange={e=>{ setForm({...form, instagram:e.target.value}); setSaved(false) }} /></div>
+            <div><label>Телефон</label><input value={form.phone} onChange={e=>{ setForm({...form, phone:e.target.value}); setSaved(false) }} />{errors.phone && <small className="muted">{errors.phone}</small>}</div>
+            <div><label>Email</label><input value={form.email} onChange={e=>{ setForm({...form, email:e.target.value}); setSaved(false) }} />{errors.email && <small className="muted">{errors.email}</small>}</div>
+            <div><label>Пароль</label><input type="password" value={form.password} onChange={e=>{ setForm({...form, password:e.target.value}); setSaved(false) }} /></div>
+            {errors.contact && <div className="badge" style={{background:'rgba(255,0,0,0.1)'}}>{errors.contact}</div>}
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <button type="submit">{saved ? 'Сохранено ✔' : 'Сохранить'}</button>
+              {saved && <small className="muted">Обновлено</small>}
+            </div>
+          </form>
+        </div>
+        
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
             <h3 style={{marginTop:0}}>{t('my_bookings')}</h3>
             <div style={{display:'flex',gap:8}}>
@@ -171,6 +169,8 @@ React.useEffect(()=>{
         </div>
       )}
     
+
+{toast && (<div className='toast'>{toast}</div>)}
 
 {notif && (
   <div className="modal-backdrop" onClick={()=>setNotif(null)}>
