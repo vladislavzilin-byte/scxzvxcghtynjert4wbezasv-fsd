@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useTranslation } from '../lib/i18n';
+import { t } from '../lib/i18n'; 
 import { getUser, loginUser, logoutUser, findUserByPhone } from '../utils/storage';
 
 export default function Auth() {
-  const { t } = useTranslation();
   const [current, setCurrent] = useState(getUser());
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +20,7 @@ export default function Auth() {
       const c = wrongCount + 1;
       setWrongCount(c);
       if (c >= 1) setShowRecovery(true);
-      alert(t('wrong'));
+      alert(t('wrong_login'));
     }
   };
 
@@ -33,13 +32,14 @@ export default function Auth() {
   const recover = () => {
     const u = findUserByPhone(recoveryPhone.trim());
     if (!u) {
-      alert(t('not_found'));
+      alert(t('user_not_found'));
       return;
     }
     setFoundPass(u.password);
   };
 
-  // ░░░ ПРОФИЛЬ ░░░
+  // ███████████  ПРОФИЛЬ  ███████████
+
   if (current) {
     const initials = (current.name || '?')
       .split(' ')
@@ -61,7 +61,7 @@ export default function Auth() {
             maxWidth: '1150px',
             padding: '28px 34px',
             borderRadius: '22px',
-            background: 'rgba(17, 0, 40, 0.55)',
+            background: 'rgba(17,0,40,0.55)',
             border: '1px solid rgba(168,85,247,0.35)',
             backdropFilter: 'blur(16px)',
             boxShadow: '0 0 32px rgba(120,0,255,0.25)',
@@ -70,78 +70,53 @@ export default function Auth() {
             gap: '28px',
           }}
         >
-          {/* АВАТАР */}
+          {/* Аватар */}
           <div
             style={{
               width: '56px',
               height: '56px',
-              borderRadius: '16px',
-              background: 'linear-gradient(145deg, #6d28d9, #8b5cf6)',
+              borderRadius: '14px',
+              background: 'linear-gradient(145deg,#6d28d9,#8b5cf6)',
               display: 'flex',
-              justifyContent: 'center',
               alignItems: 'center',
+              justifyContent: 'center',
               fontSize: '22px',
-              fontWeight: '700',
               color: 'white',
-              textShadow: '0 0 4px black',
+              fontWeight: '700',
             }}
           >
             {initials}
           </div>
 
-          {/* ДАННЫЕ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            <div
-              style={{
-                fontSize: '22px',
-                fontWeight: '700',
-                color: 'white',
-                fontFamily: '"Inter", sans-serif',
-              }}
-            >
+          {/* Информация */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: 'white' }}>
               {current.name}
             </div>
 
-            {/* PHONE */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', color: '#ddd' }}>
-              <span style={{ fontSize: '17px' }}>📞</span> {current.phone}
-            </div>
+            <div style={{ color: '#ccc', fontSize: '15px' }}>📞 {current.phone}</div>
 
-            {/* INSTAGRAM */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', color: '#ddd' }}>
-              <span style={{ fontSize: '17px' }}>📸</span> {current.instagram || '-'}
-            </div>
+            {current.instagram && (
+              <div style={{ color: '#ccc', fontSize: '15px' }}>
+                📸 {current.instagram}
+              </div>
+            )}
 
-            {/* EMAIL */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', color: '#ddd' }}>
-              <span style={{ fontSize: '17px' }}>📧</span> {current.email}
-            </div>
+            <div style={{ color: '#ccc', fontSize: '15px' }}>📧 {current.email}</div>
           </div>
 
-          {/* ВЫЙТИ — СПРАВА */}
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
+          {/* Кнопка выйти */}
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
             <button
               onClick={doLogout}
               style={{
-                padding: '7px 14px',
-                width: '50%',
+                width: '40%',
+                padding: '8px 10px',
                 borderRadius: '12px',
+                background: 'rgba(120,0,255,0.25)',
                 border: '1px solid rgba(168,85,247,0.55)',
-                background: 'rgba(168,85,247,0.15)',
                 color: 'white',
-                fontSize: '15px',
-                fontWeight: '500',
                 cursor: 'pointer',
-                transition: '0.25s',
-                backdropFilter: 'blur(6px)',
-                whiteSpace: 'nowrap',
               }}
             >
               {t('logout')}
@@ -152,23 +127,17 @@ export default function Auth() {
     );
   }
 
-  // ░░░ ФОРМА ВХОДА ░░░
+  // ███████████  ФОРМА ВХОДА  ███████████
+
   return (
     <div style={{ textAlign: 'center', marginTop: '40px' }}>
-      <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '18px' }}>
-        {t('login')}
-      </div>
+      <h2>{t('login')}</h2>
 
       <input
         value={phone}
         onChange={e => setPhone(e.target.value)}
         placeholder={t('phone')}
-        style={{
-          width: '260px',
-          padding: '10px',
-          borderRadius: '10px',
-          marginBottom: '10px',
-        }}
+        style={{ padding: 10, width: 240, borderRadius: 10, marginBottom: 8 }}
       />
 
       <br />
@@ -178,43 +147,33 @@ export default function Auth() {
         onChange={e => setPassword(e.target.value)}
         placeholder={t('password')}
         type="password"
-        style={{
-          width: '260px',
-          padding: '10px',
-          borderRadius: '10px',
-        }}
+        style={{ padding: 10, width: 240, borderRadius: 10 }}
       />
 
       <br />
 
       <button
         onClick={tryLogin}
-        style={{
-          marginTop: '14px',
-          padding: '10px 20px',
-          borderRadius: '10px',
-          cursor: 'pointer',
-        }}
+        style={{ marginTop: 14, padding: '10px 20px', borderRadius: 10 }}
       >
         {t('login')}
       </button>
 
-      {/* ░░░ ОКНО ВОССТАНОВЛЕНИЯ ░░░ */}
+      {/* █████ Окно восстановления █████ */}
       {showRecovery && (
         <div
           style={{
-            marginTop: '30px',
-            padding: '22px',
-            borderRadius: '16px',
-            background: 'rgba(0,0,0,0.3)',
-            border: '1px solid rgba(150,150,150,0.3)',
-            width: '300px',
-            marginInline: 'auto',
+            marginTop: 30,
+            padding: 22,
+            borderRadius: 14,
+            background: 'rgba(0,0,0,0.4)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            width: 280,
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}
         >
-          <div style={{ marginBottom: '12px', fontSize: '20px', fontWeight: '600' }}>
-            {t('recovery')}
-          </div>
+          <h3>{t('restore_password')}</h3>
 
           <input
             value={recoveryPhone}
@@ -222,26 +181,26 @@ export default function Auth() {
             placeholder={t('phone')}
             style={{
               width: '100%',
-              padding: '10px',
-              borderRadius: '10px',
-              marginBottom: '10px',
+              padding: 10,
+              borderRadius: 10,
+              marginBottom: 10,
             }}
           />
 
           <button
             onClick={recover}
             style={{
-              padding: '8px 16px',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              marginBottom: '12px',
+              padding: 8,
+              width: '100%',
+              borderRadius: 10,
+              marginBottom: 12,
             }}
           >
             {t('find')}
           </button>
 
           {foundPass && (
-            <div style={{ fontSize: '18px', marginTop: '10px' }}>
+            <div style={{ color: 'white', fontSize: 18 }}>
               {t('your_password')}: <b>{foundPass}</b>
             </div>
           )}
