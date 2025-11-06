@@ -1,3 +1,4 @@
+import ForgotPasswordModal from './ForgotPasswordModal'
 
 import { useState } from 'react'
 import { getUsers, saveUsers, setCurrentUser, getCurrentUser } from '../lib/storage'
@@ -5,6 +6,8 @@ import { useI18n } from '../lib/i18n'
 
 export default function Auth({ onAuth }){
   const { t } = useI18n()
+  const [fails,setFails]=useState(0)
+  const [recoverOpen,setRecoverOpen]=useState(false)
   const [mode,setMode]=useState('login')
   const [name,setName]=useState('')
   const [instagram,setInstagram]=useState('')
@@ -24,7 +27,9 @@ export default function Auth({ onAuth }){
     }else{
       const id=identifier.trim()
       const user=users.find(u=>(u.phone===id||u.email===id)&&u.password===password)
-      if(!user) return alert('Неверный логин или пароль')
+      if(!user) setFails(fails+1);
+      setRecoverOpen(true);
+      return alert('Неверный логин или пароль')
       setCurrentUser(user); onAuth?.(user)
     }
   }
@@ -66,3 +71,5 @@ export default function Auth({ onAuth }){
     </div>
   )
 }
+
+<ForgotPasswordModal open={recoverOpen} onClose={()=>setRecoverOpen(false)} />
