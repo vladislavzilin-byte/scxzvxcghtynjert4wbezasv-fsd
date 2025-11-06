@@ -56,43 +56,131 @@ export default function Auth({ onAuth }) {
 
   // ✅ Logged-in view
   if (current) {
-    return (
+  const initials = current.name
+    ? current.name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
+    : "U";
+
+  // Premium avatar dynamic color generator
+  const hue = (current.name.length * 37) % 360;
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        padding: '28px',
+        borderRadius: '22px',
+        background: 'rgba(255, 255, 255, 0.06)',
+        border: '1px solid rgba(255, 255, 255, 0.22)',
+        backdropFilter: 'blur(22px)',
+        WebkitBackdropFilter: 'blur(22px)',
+        boxShadow: '0 12px 45px rgba(0,0,0,0.35)',
+        overflow: 'hidden',
+        marginBottom: '30px',
+        animation: 'fadeInUp 0.6s ease'
+      }}
+    >
+
+      {/* NEON GLOW BORDER */}
       <div
         style={{
-          backdropFilter: 'blur(18px)',
-          background: 'rgba(255,255,255,0.08)',
-          border: '1px solid rgba(255,255,255,0.25)',
-          borderRadius: '18px',
-          padding: '20px',
-          boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
-          marginBottom: '20px'
+          position: 'absolute',
+          inset: 0,
+          borderRadius: '22px',
+          padding: '2px',
+          background: `linear-gradient(120deg,
+            hsla(${hue}, 90%, 65%, 0.4),
+            hsla(${(hue + 50) % 360}, 90%, 65%, 0.25),
+            hsla(${(hue + 120) % 360}, 90%, 65%, 0.4)
+          )`,
+          WebkitMask: 
+            'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          pointerEvents: 'none'
         }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 600 }}>{current.name}</div>
-            <div style={{ opacity: 0.8 }}>📞 {current.phone}</div>
-            {current.email && <div style={{ opacity: 0.8 }}>✉️ {current.email}</div>}
-            {current.instagram && <div style={{ opacity: 0.8 }}>📸 {current.instagram}</div>}
-          </div>
+      />
 
-          <button
-            onClick={logout}
+      {/* CONTENT */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+
+        {/* LEFT SIDE */}
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+
+          {/* AVATAR */}
+          <div
             style={{
-              padding: '8px 14px',
-              borderRadius: '10px',
-              border: '1px solid rgba(255,255,255,0.4)',
-              background: 'rgba(255,255,255,0.12)',
+              width: 58,
+              height: 58,
+              borderRadius: '50%',
+              background: `linear-gradient(135deg,
+                hsla(${hue}, 80%, 60%, 0.3),
+                hsla(${hue}, 80%, 60%, 0.15)
+              )`,
+              border: `2px solid hsla(${hue}, 80%, 65%, 0.5)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.25rem',
+              fontWeight: 700,
               color: '#fff',
-              cursor: 'pointer'
+              letterSpacing: '1px',
+              textShadow: '0 0 8px rgba(0,0,0,0.6)',
+              animation: 'avatarFloat 4s ease-in-out infinite'
             }}
           >
-            {t('logout')}
-          </button>
+            {initials}
+          </div>
+
+          {/* TEXT */}
+          <div>
+            <div
+              style={{
+                fontSize: '1.35rem',
+                fontWeight: 700,
+                background: `linear-gradient(90deg,
+                  hsla(${hue}, 100%, 80%, 1),
+                  hsla(${(hue + 60) % 360}, 95%, 75%, 0.9)
+                )`,
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                marginBottom: 4
+              }}
+            >
+              {current.name}
+            </div>
+
+            <div style={{ opacity: 0.85 }}>📞 {current.phone}</div>
+            {current.email && <div style={{ opacity: 0.85 }}>✉️ {current.email}</div>}
+            {current.instagram && <div style={{ opacity: 0.85 }}>📸 {current.instagram}</div>}
+          </div>
         </div>
+
+        {/* LOGOUT */}
+        <button
+          onClick={logout}
+          style={{
+            padding: '7px 12px',
+            fontSize: '0.85rem',
+            borderRadius: '12px',
+            border: `1px solid hsla(${hue}, 90%, 75%, 0.5)`,
+            background: 'rgba(255,255,255,0.12)',
+            color: '#fff',
+            cursor: 'pointer',
+            transition: '0.25s',
+            backdropFilter: 'blur(6px)'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.background = `hsla(${hue}, 100%, 70%, 0.22)`
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = 'rgba(255,255,255,0.12)'
+          }}
+        >
+          {t('logout')}
+        </button>
       </div>
-    )
-  }
+    </div>
+  );
+}
 
   // ✅ Login + Register
   return (
