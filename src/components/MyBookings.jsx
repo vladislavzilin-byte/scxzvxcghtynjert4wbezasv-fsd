@@ -77,6 +77,30 @@ React.useEffect(()=>{
         </div>
       </div>
       <div className="col">
+        <div className="card" style={{marginBottom:16}}>
+          <h3 style={{marginTop:0}}>{t('my_profile')}</h3>
+          <form className="col" style={{gap:12}}>
+            <div>
+              <label>{t('name')}</label>
+              <input value={user.name}/>
+            </div>
+            <div>
+              <label>Instagram</label>
+              <input value={user.instagram}/>
+            </div>
+            <div>
+              <label>{t('phone')}</label>
+              <input value={user.phone}/>
+            </div>
+            <div>
+              <label>Email</label>
+              <input value={user.email}/>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className="col">
         <div className="card">
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
             <h3 style={{marginTop:0}}>{t('my_bookings')}</h3>
