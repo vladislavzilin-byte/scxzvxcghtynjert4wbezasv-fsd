@@ -1,7 +1,7 @@
 {
   "name": "iz-booking-v7-6",
   "private": true,
-  "version": "8.0.8",
+  "version": "7.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
