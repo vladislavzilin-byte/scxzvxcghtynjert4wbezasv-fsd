@@ -1,22 +1,17 @@
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { getCurrentUser, setCurrentUser, getUsers, saveUsers } from '../lib/storage'
 import { useI18n } from '../lib/i18n'
 
 export default function Profile(){
   const { t } = useI18n()
-  const [user, setUser] = useState(getCurrentUser())
-  const [msg, setMsg] = useState(null)
-
-  useEffect(()=>{
-    setUser(getCurrentUser())
-  }, [])
+  const user = getCurrentUser()
 
   if(!user){
     return (
       <div className="card" style={{marginTop:16}}>
-        <h2>{t('my_profile')}</h2>
-        <p>{t('profile_login_hint')}</p>
+        <h3>{t('my_profile')}</h3>
+        <p className="muted">{t('profile_login_hint')}</p>
       </div>
     )
   }
@@ -28,59 +23,51 @@ export default function Profile(){
     email: user.email || '',
     password: user.password || ''
   })
+  const [toast, setToast] = useState(null)
 
-  const onChange = (k)=>(e)=> setForm(prev=>({...prev, [k]: e.target.value }))
+  const onChange = k => e => setForm(prev => ({...prev, [k]: e.target.value}))
 
-  const onSave = (e)=>{
+  const save = e => {
     e.preventDefault()
-    // basic checks
-    if(!form.phone && !form.email){
-      setMsg(t('profile_need_contact'))
-      return
-    }
-
-    // Update users array
     const users = getUsers()
-    const idx = users.findIndex(u => (u.phone && u.phone===user.phone) || (u.email && u.email===user.email))
-    const updated = { ...users[idx>=0?idx:0], ...form }
+    const idx = users.findIndex(u => (u.phone===user.phone) || (u.email===user.email))
+    const updated = {...user, ...form}
     if(idx>=0) users[idx] = updated; else users.push(updated)
     saveUsers(users)
-
     setCurrentUser(updated)
-    setUser(updated)
-    setMsg(t('profile_saved'))
-    setTimeout(()=>setMsg(null), 1500)
+    setToast(t('profile_saved'))
+    setTimeout(()=>setToast(null),1500)
   }
 
   return (
     <div className="card" style={{marginTop:16}}>
-      <h2>{t('my_profile')}</h2>
-      <form onSubmit={onSave} className="row">
-        <div className="col">
+      <h3>{t('my_profile')}</h3>
+      <form onSubmit={save} className="col" style={{gap:12}}>
+        <div>
           <label>{t('name')}</label>
-          <input value={form.name} onChange={onChange('name')} placeholder="Inga" />
+          <input value={form.name} onChange={onChange('name')} />
         </div>
-        <div className="col">
+        <div>
           <label>{t('instagram')}</label>
-          <input value={form.instagram} onChange={onChange('instagram')} placeholder="@username" />
+          <input value={form.instagram} onChange={onChange('instagram')} />
         </div>
-        <div className="col">
+        <div>
           <label>{t('phone')}</label>
-          <input value={form.phone} onChange={onChange('phone')} placeholder="+3706..." />
+          <input value={form.phone} onChange={onChange('phone')} />
         </div>
-        <div className="col">
+        <div>
           <label>{t('email_opt')}</label>
-          <input value={form.email} onChange={onChange('email')} placeholder="name@example.com" />
+          <input value={form.email} onChange={onChange('email')} />
         </div>
-        <div className="col">
+        <div>
           <label>{t('password')}</label>
-          <input type="password" value={form.password} onChange={onChange('password')} placeholder="••••••••" />
+          <input type="password" value={form.password} onChange={onChange('password')} />
         </div>
-        <div className="col" style={{alignSelf:'end'}}>
+        <div>
           <button type="submit">{t('save')}</button>
         </div>
       </form>
-      {msg && <div className="notif success" style={{marginTop:8}}>{msg}</div>}
+      {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }
