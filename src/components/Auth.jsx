@@ -1,261 +1,252 @@
-import { useState } from 'react'
-import { getUsers, saveUsers, setCurrentUser, getCurrentUser } from '../lib/storage'
-import { useI18n } from '../lib/i18n'
-import ForgotPasswordModal from './ForgotPasswordModal'
+import React, { useState } from 'react';
+import { useTranslation } from '../lib/i18n';
+import { getUser, loginUser, logoutUser, findUserByPhone } from '../utils/storage';
 
-export default function Auth({ onAuth }) {
-  const { t } = useI18n()
+export default function Auth() {
+  const { t } = useTranslation();
+  const [current, setCurrent] = useState(getUser());
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [wrongCount, setWrongCount] = useState(0);
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [foundPass, setFoundPass] = useState('');
+  const [recoveryPhone, setRecoveryPhone] = useState('');
 
-  const [mode, setMode] = useState('login')
-  const [name, setName] = useState('')
-  const [instagram, setInstagram] = useState('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [identifier, setIdentifier] = useState('')
-
-  const [recoverOpen, setRecoverOpen] = useState(false)
-
-  const submit = (e) => {
-    e.preventDefault()
-    const users = getUsers()
-
-    if (mode === 'register') {
-      if (!name || !phone || !password) return alert('Заполните все поля')
-      if (users.find((u) => u.phone === phone)) return alert('Такой номер уже зарегистрирован')
-
-      const user = { name, instagram, phone, email, password }
-      users.push(user)
-      saveUsers(users)
-      setCurrentUser(user)
-      onAuth?.(user)
-      return
+  const tryLogin = () => {
+    const u = loginUser(phone, password);
+    if (u) {
+      setCurrent(u);
+      setWrongCount(0);
+    } else {
+      const c = wrongCount + 1;
+      setWrongCount(c);
+      if (c >= 1) setShowRecovery(true);
+      alert(t('wrong'));
     }
+  };
 
-    const id = identifier.trim()
-    const user = users.find(
-      (u) => (u.phone === id || u.email === id) && u.password === password
-    )
+  const doLogout = () => {
+    logoutUser();
+    setCurrent(null);
+  };
 
-    if (!user) {
-      setRecoverOpen(true)
-      return alert('Неверный логин или пароль')
+  const recover = () => {
+    const u = findUserByPhone(recoveryPhone.trim());
+    if (!u) {
+      alert(t('not_found'));
+      return;
     }
+    setFoundPass(u.password);
+  };
 
-    setCurrentUser(user)
-    onAuth?.(user)
-  }
-
-  const logout = () => {
-    setCurrentUser(null)
-    onAuth?.(null)
-  }
-
-  const current = getCurrentUser()
-
-  // ✅ LOGGED IN — PREMIUM PURPLE AURORA BLOCK
+  // ░░░ ПРОФИЛЬ ░░░
   if (current) {
-  const initials = current.name
-    ? current.name.split(" ").map(p => p[0]).join("").slice(0,2).toUpperCase()
-    : "U"
+    const initials = (current.name || '?')
+      .split(' ')
+      .map(w => w[0]?.toUpperCase())
+      .slice(0, 2)
+      .join('');
 
-  return (
-    <div
-      style={{
-        position: 'relative',
-        padding: '26px',
-        borderRadius: '22px',
-        background: 'rgba(15, 6, 26, 0.55)',
-        border: '1px solid rgba(168, 85, 247, 0.35)',
-        backdropFilter: 'blur(22px)',
-        WebkitBackdropFilter: 'blur(22px)',
-        boxShadow: '0 12px 45px rgba(0,0,0,0.45)',
-        overflow: 'hidden',
-        marginBottom: '30px',
-        fontFamily: 'Poppins, Inter, sans-serif'
-      }}
-    >
-      {/* Aurora */}
+    return (
       <div
         style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          zIndex: 0,
-          background:
-            'radial-gradient(900px 500px at -10% 120%, rgba(168,85,247,0.18), transparent 65%),' +
-            'radial-gradient(700px 400px at 110% -20%, rgba(139,92,246,0.16), transparent 60%),' +
-            'radial-gradient(800px 450px at 50% 120%, rgba(99,102,241,0.12), transparent 65%)',
-          animation: 'auroraShift 12s ease-in-out infinite alternate'
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: '40px',
         }}
-      />
-
-      {/* Border glow */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '22px',
-          padding: '1.5px',
-          background: 'linear-gradient(120deg, rgba(168,85,247,0.55), rgba(139,92,246,0.35), rgba(99,102,241,0.45))',
-          WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
-          WebkitMaskComposite: 'xor',
-          opacity: 0.7
-        }}
-      />
-
-      {/* Content */}
-      <div style={{ position:'relative', zIndex:1, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-
-        {/* LEFT */}
-        <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-
-          {/* Initials badge */}
+      >
+        <div
+          style={{
+            width: '95%',
+            maxWidth: '1150px',
+            padding: '28px 34px',
+            borderRadius: '22px',
+            background: 'rgba(17, 0, 40, 0.55)',
+            border: '1px solid rgba(168,85,247,0.35)',
+            backdropFilter: 'blur(16px)',
+            boxShadow: '0 0 32px rgba(120,0,255,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '28px',
+          }}
+        >
+          {/* АВАТАР */}
           <div
             style={{
-              minWidth: 44,
-              height: 44,
-              borderRadius: 12,
-              background: 'rgba(168,85,247,0.18)',
-              border: '1px solid rgba(168,85,247,0.35)',
+              width: '56px',
+              height: '56px',
+              borderRadius: '16px',
+              background: 'linear-gradient(145deg, #6d28d9, #8b5cf6)',
               display: 'flex',
-              alignItems: 'center',
               justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: '1.1rem',
-              animation: 'avatarPulse 3.6s ease-in-out infinite'
+              alignItems: 'center',
+              fontSize: '22px',
+              fontWeight: '700',
+              color: 'white',
+              textShadow: '0 0 4px black',
             }}
           >
             {initials}
           </div>
 
-          {/* User data */}
-          <div>
+          {/* ДАННЫЕ */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <div
               style={{
-                fontSize: '1.35rem',
-                fontWeight: 700,
-                marginBottom: 3,
-                background: 'linear-gradient(90deg, rgba(236,223,255,1), rgba(198,173,255,0.85))',
-                WebkitBackgroundClip: 'text',
-                color: 'transparent'
+                fontSize: '22px',
+                fontWeight: '700',
+                color: 'white',
+                fontFamily: '"Inter", sans-serif',
               }}
             >
               {current.name}
             </div>
 
-            {/* Phone */}
-            <div style={{ opacity:0.9, display:'flex', alignItems:'center', gap:6 }}>
-              📞 <span>{current.phone}</span>
+            {/* PHONE */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', color: '#ddd' }}>
+              <span style={{ fontSize: '17px' }}>📞</span> {current.phone}
             </div>
 
-            {/* Instagram ✅ возвращён */}
-            {current.instagram && (
-              <div style={{ opacity:0.85, display:'flex', alignItems:'center', gap:6 }}>
-                📸 <span>{current.instagram}</span>
-              </div>
-            )}
+            {/* INSTAGRAM */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', color: '#ddd' }}>
+              <span style={{ fontSize: '17px' }}>📸</span> {current.instagram || '-'}
+            </div>
 
-            {/* Email */}
-            {current.email && (
-              <div style={{ opacity:0.85, display:'flex', alignItems:'center', gap:6 }}>
-                ✉️ <span>{current.email}</span>
-              </div>
-            )}
+            {/* EMAIL */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', color: '#ddd' }}>
+              <span style={{ fontSize: '17px' }}>📧</span> {current.email}
+            </div>
+          </div>
+
+          {/* ВЫЙТИ — СПРАВА */}
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <button
+              onClick={doLogout}
+              style={{
+                padding: '7px 14px',
+                width: '50%',
+                borderRadius: '12px',
+                border: '1px solid rgba(168,85,247,0.55)',
+                background: 'rgba(168,85,247,0.15)',
+                color: 'white',
+                fontSize: '15px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: '0.25s',
+                backdropFilter: 'blur(6px)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {t('logout')}
+            </button>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* RIGHT — LOGOUT */}
-       {/* RIGHT — LOGOUT */}
-<div
-  style={{
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1, // чтобы занял всё доступное по высоте
-  }}
->
-  <button
-    onClick={logout}
-    style={{
-      padding: '6px 14px',
-      fontSize: '0.85rem',
-      borderRadius: '10px',
-      border: '1px solid rgba(168,85,247,0.5)',
-      background: 'rgba(168,85,247,0.12)',
-      color: '#fff',
-      cursor: 'pointer',
-      transition: '0.25s',
-      whiteSpace: 'nowrap',
-      backdropFilter: 'blur(6px)',
-      width: '50%',   // твои 50%
-      textAlign: 'center',
-    }}
-  >
-    {t('logout')}
-  </button>
-</div>
-
-
-  // ✅ LOGIN + REGISTER
+  // ░░░ ФОРМА ВХОДА ░░░
   return (
-    <>
-      <div className="card">
-        <div style={{ display:'flex', gap:8, marginBottom:10 }}>
-          <button className={mode === 'login' ? '' : 'ghost'} onClick={() => setMode('login')}>
-            {t('login')}
-          </button>
-          <button className={mode === 'register' ? '' : 'ghost'} onClick={() => setMode('register')}>
-            {t('register')}
-          </button>
-        </div>
-
-        <form onSubmit={submit} className="row">
-
-          {mode === 'register' && (
-            <>
-              <div className="col">
-                <label>{t('name')}</label>
-                <input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Inga" />
-              </div>
-
-              <div className="col">
-                <label>{t('instagram')}</label>
-                <input value={instagram} onChange={(e)=>setInstagram(e.target.value)} placeholder="@username" />
-              </div>
-
-              <div className="col">
-                <label>{t('email_opt')}</label>
-                <input value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="name@example.com" />
-              </div>
-
-              <div className="col">
-                <label>{t('phone')}</label>
-                <input value={phone} onChange={(e)=>setPhone(e.target.value)} placeholder="+3706..." />
-              </div>
-            </>
-          )}
-
-          {mode === 'login' && (
-            <div className="col">
-              <label>{t('phone_or_email')}</label>
-              <input value={identifier} onChange={(e)=>setIdentifier(e.target.value)} placeholder="+3706... / email" />
-            </div>
-          )}
-
-          <div className="col">
-            <label>{t('password')}</label>
-            <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="••••••••" />
-          </div>
-
-          <div className="col" style={{ alignSelf:'end' }}>
-            <button type="submit">{mode === 'login' ? t('login') : t('register')}</button>
-          </div>
-        </form>
+    <div style={{ textAlign: 'center', marginTop: '40px' }}>
+      <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '18px' }}>
+        {t('login')}
       </div>
 
-      <ForgotPasswordModal open={recoverOpen} onClose={()=>setRecoverOpen(false)} />
-    </>
-  )
+      <input
+        value={phone}
+        onChange={e => setPhone(e.target.value)}
+        placeholder={t('phone')}
+        style={{
+          width: '260px',
+          padding: '10px',
+          borderRadius: '10px',
+          marginBottom: '10px',
+        }}
+      />
+
+      <br />
+
+      <input
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        placeholder={t('password')}
+        type="password"
+        style={{
+          width: '260px',
+          padding: '10px',
+          borderRadius: '10px',
+        }}
+      />
+
+      <br />
+
+      <button
+        onClick={tryLogin}
+        style={{
+          marginTop: '14px',
+          padding: '10px 20px',
+          borderRadius: '10px',
+          cursor: 'pointer',
+        }}
+      >
+        {t('login')}
+      </button>
+
+      {/* ░░░ ОКНО ВОССТАНОВЛЕНИЯ ░░░ */}
+      {showRecovery && (
+        <div
+          style={{
+            marginTop: '30px',
+            padding: '22px',
+            borderRadius: '16px',
+            background: 'rgba(0,0,0,0.3)',
+            border: '1px solid rgba(150,150,150,0.3)',
+            width: '300px',
+            marginInline: 'auto',
+          }}
+        >
+          <div style={{ marginBottom: '12px', fontSize: '20px', fontWeight: '600' }}>
+            {t('recovery')}
+          </div>
+
+          <input
+            value={recoveryPhone}
+            onChange={e => setRecoveryPhone(e.target.value)}
+            placeholder={t('phone')}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '10px',
+              marginBottom: '10px',
+            }}
+          />
+
+          <button
+            onClick={recover}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              marginBottom: '12px',
+            }}
+          >
+            {t('find')}
+          </button>
+
+          {foundPass && (
+            <div style={{ fontSize: '18px', marginTop: '10px' }}>
+              {t('your_password')}: <b>{foundPass}</b>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
