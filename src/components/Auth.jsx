@@ -180,7 +180,7 @@ export default function Auth({ onAuth }) {
             transition: '0.25s',
             whiteSpace: 'nowrap',
             backdropFilter: 'blur(6px)',
-            width: '65%'  // ✅ уменьшено на 65%
+            width: '65%',  // ✅ уменьшено на 65%
             textAlign: 'center',
           }}
         >
