@@ -1,211 +1,136 @@
-import React, { useState } from 'react';
-import { t } from '../lib/i18n'; 
-import { getUser, loginUser, logoutUser, findUserByPhone } from '../utils/storage';
+if (current) {
+  const initials = current.name
+    ? current.name.split(" ").map(p => p[0]).join("").slice(0,2).toUpperCase()
+    : "U"
 
-export default function Auth() {
-  const [current, setCurrent] = useState(getUser());
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [wrongCount, setWrongCount] = useState(0);
-  const [showRecovery, setShowRecovery] = useState(false);
-  const [foundPass, setFoundPass] = useState('');
-  const [recoveryPhone, setRecoveryPhone] = useState('');
-
-  const tryLogin = () => {
-    const u = loginUser(phone, password);
-    if (u) {
-      setCurrent(u);
-      setWrongCount(0);
-    } else {
-      const c = wrongCount + 1;
-      setWrongCount(c);
-      if (c >= 1) setShowRecovery(true);
-      alert(t('wrong_login'));
-    }
-  };
-
-  const doLogout = () => {
-    logoutUser();
-    setCurrent(null);
-  };
-
-  const recover = () => {
-    const u = findUserByPhone(recoveryPhone.trim());
-    if (!u) {
-      alert(t('user_not_found'));
-      return;
-    }
-    setFoundPass(u.password);
-  };
-
-  // ███████████  ПРОФИЛЬ  ███████████
-
-  if (current) {
-    const initials = (current.name || '?')
-      .split(' ')
-      .map(w => w[0]?.toUpperCase())
-      .slice(0, 2)
-      .join('');
-
-    return (
+  return (
+    <div
+      style={{
+        position: 'relative',
+        padding: '26px',
+        borderRadius: '22px',
+        background: 'rgba(15, 6, 26, 0.55)',
+        border: '1px solid rgba(168, 85, 247, 0.35)',
+        backdropFilter: 'blur(22px)',
+        WebkitBackdropFilter: 'blur(22px)',
+        boxShadow: '0 12px 45px rgba(0,0,0,0.45)',
+        overflow: 'hidden',
+        marginBottom: '30px',
+        fontFamily: 'Poppins, Inter, sans-serif'
+      }}
+    >
+      {/* Aurora */}
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'center',
-          marginTop: '40px',
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          background:
+            'radial-gradient(900px 500px at -10% 120%, rgba(168,85,247,0.18), transparent 65%),' +
+            'radial-gradient(700px 400px at 110% -20%, rgba(139,92,246,0.16), transparent 60%),' +
+            'radial-gradient(800px 450px at 50% 120%, rgba(99,102,241,0.12), transparent 65%)',
+          animation: 'auroraShift 12s ease-in-out infinite alternate'
         }}
-      >
-        <div
-          style={{
-            width: '95%',
-            maxWidth: '1150px',
-            padding: '28px 34px',
-            borderRadius: '22px',
-            background: 'rgba(17,0,40,0.55)',
-            border: '1px solid rgba(168,85,247,0.35)',
-            backdropFilter: 'blur(16px)',
-            boxShadow: '0 0 32px rgba(120,0,255,0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '28px',
-          }}
-        >
-          {/* Аватар */}
+      />
+
+      {/* Border glow */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: '22px',
+          padding: '1.5px',
+          background: 'linear-gradient(120deg, rgba(168,85,247,0.55), rgba(139,92,246,0.35), rgba(99,102,241,0.45))',
+          WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+          WebkitMaskComposite: 'xor',
+          opacity: 0.7
+        }}
+      />
+
+      {/* Content */}
+      <div style={{ position:'relative', zIndex:1, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+
+        {/* LEFT */}
+        <div style={{ display:'flex', gap:16, alignItems:'center' }}>
+
+          {/* Initials badge */}
           <div
             style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '14px',
-              background: 'linear-gradient(145deg,#6d28d9,#8b5cf6)',
+              minWidth: 44,
+              height: 44,
+              borderRadius: 12,
+              background: 'rgba(168,85,247,0.18)',
+              border: '1px solid rgba(168,85,247,0.35)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '22px',
-              color: 'white',
-              fontWeight: '700',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '1.1rem',
+              animation: 'avatarPulse 3.6s ease-in-out infinite'
             }}
           >
             {initials}
           </div>
 
-          {/* Информация */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: 'white' }}>
+          {/* User data */}
+          <div>
+            <div
+              style={{
+                fontSize: '1.35rem',
+                fontWeight: 700,
+                marginBottom: 3,
+                background: 'linear-gradient(90deg, rgba(236,223,255,1), rgba(198,173,255,0.85))',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent'
+              }}
+            >
               {current.name}
             </div>
 
-            <div style={{ color: '#ccc', fontSize: '15px' }}>📞 {current.phone}</div>
+            {/* Phone */}
+            <div style={{ opacity:0.9, display:'flex', alignItems:'center', gap:6 }}>
+              📞 <span>{current.phone}</span>
+            </div>
 
+            {/* Instagram ✅ возвращён */}
             {current.instagram && (
-              <div style={{ color: '#ccc', fontSize: '15px' }}>
-                📸 {current.instagram}
+              <div style={{ opacity:0.85, display:'flex', alignItems:'center', gap:6 }}>
+                📸 <span>{current.instagram}</span>
               </div>
             )}
 
-            <div style={{ color: '#ccc', fontSize: '15px' }}>📧 {current.email}</div>
-          </div>
-
-          {/* Кнопка выйти */}
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <button
-              onClick={doLogout}
-              style={{
-                width: '40%',
-                padding: '8px 10px',
-                borderRadius: '12px',
-                background: 'rgba(120,0,255,0.25)',
-                border: '1px solid rgba(168,85,247,0.55)',
-                color: 'white',
-                cursor: 'pointer',
-              }}
-            >
-              {t('logout')}
-            </button>
+            {/* Email */}
+            {current.email && (
+              <div style={{ opacity:0.85, display:'flex', alignItems:'center', gap:6 }}>
+                ✉️ <span>{current.email}</span>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-    );
-  }
 
-  // ███████████  ФОРМА ВХОДА  ███████████
-
-  return (
-    <div style={{ textAlign: 'center', marginTop: '40px' }}>
-      <h2>{t('login')}</h2>
-
-      <input
-        value={phone}
-        onChange={e => setPhone(e.target.value)}
-        placeholder={t('phone')}
-        style={{ padding: 10, width: 240, borderRadius: 10, marginBottom: 8 }}
-      />
-
-      <br />
-
-      <input
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        placeholder={t('password')}
-        type="password"
-        style={{ padding: 10, width: 240, borderRadius: 10 }}
-      />
-
-      <br />
-
-      <button
-        onClick={tryLogin}
-        style={{ marginTop: 14, padding: '10px 20px', borderRadius: 10 }}
-      >
-        {t('login')}
-      </button>
-
-      {/* █████ Окно восстановления █████ */}
-      {showRecovery && (
-        <div
+        {/* RIGHT — LOGOUT */}
+        <button
+          onClick={logout}
           style={{
-            marginTop: 30,
-            padding: 22,
-            borderRadius: 14,
-            background: 'rgba(0,0,0,0.4)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            width: 280,
-            marginLeft: 'auto',
-            marginRight: 'auto',
+            padding: '6px 14px',
+            fontSize: '0.85rem',
+            borderRadius: '10px',
+            border: '1px solid rgba(168,85,247,0.5)',
+            background: 'rgba(168,85,247,0.12)',
+            color: '#fff',
+            cursor: 'pointer',
+            transition: '0.25s',
+            whiteSpace: 'nowrap',
+            backdropFilter: 'blur(6px)',
+            width: '50%'  // ✅ уменьшено на 50%
           }}
         >
-          <h3>{t('restore_password')}</h3>
+          {t('logout')}
+        </button>
 
-          <input
-            value={recoveryPhone}
-            onChange={e => setRecoveryPhone(e.target.value)}
-            placeholder={t('phone')}
-            style={{
-              width: '100%',
-              padding: 10,
-              borderRadius: 10,
-              marginBottom: 10,
-            }}
-          />
-
-          <button
-            onClick={recover}
-            style={{
-              padding: 8,
-              width: '100%',
-              borderRadius: 10,
-              marginBottom: 12,
-            }}
-          >
-            {t('find')}
-          </button>
-
-          {foundPass && (
-            <div style={{ color: 'white', fontSize: 18 }}>
-              {t('your_password')}: <b>{foundPass}</b>
-            </div>
-          )}
-        </div>
-      )}
+      </div>
     </div>
-  );
+  )
 }
