@@ -167,29 +167,35 @@ export default function Auth({ onAuth }) {
         </div>
 
         {/* RIGHT — LOGOUT */}
-        <button
-          onClick={logout}
-          style={{
-            padding: '6px 14px',
-            fontSize: '0.85rem',
-            borderRadius: '10px',
-            border: '1px solid rgba(168,85,247,0.5)',
-            background: 'rgba(168,85,247,0.12)',
-            color: '#fff',
-            cursor: 'pointer',
-            transition: '0.25s',
-            whiteSpace: 'nowrap',
-            backdropFilter: 'blur(6px)',
-            width: '50%'  // ✅ уменьшено на 50%
-          }}
-        >
-          {t('logout')}
-        </button>
-
-      </div>
-    </div>
-  )
-}
+       {/* RIGHT — LOGOUT */}
+<div
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1, // чтобы занял всё доступное по высоте
+  }}
+>
+  <button
+    onClick={logout}
+    style={{
+      padding: '6px 14px',
+      fontSize: '0.85rem',
+      borderRadius: '10px',
+      border: '1px solid rgba(168,85,247,0.5)',
+      background: 'rgba(168,85,247,0.12)',
+      color: '#fff',
+      cursor: 'pointer',
+      transition: '0.25s',
+      whiteSpace: 'nowrap',
+      backdropFilter: 'blur(6px)',
+      width: '50%',   // твои 50%
+      textAlign: 'center',
+    }}
+  >
+    {t('logout')}
+  </button>
+</div>
 
 
   // ✅ LOGIN + REGISTER
