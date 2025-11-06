@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react'
-import { getUsers, saveUsers, setCurrentUser } from '../lib/storage'
-
-import ForgotPasswordModal from './ForgotPasswordModal'
+import { useState } from 'react'
+import { getUsers, saveUsers, setCurrentUser, getCurrentUser } from '../lib/storage'
+import { useI18n } from '../lib/i18n'
 
 export default function Auth({ onAuth }){
+  const { t } = useI18n()
   const [mode,setMode]=useState('login')
   const [name,setName]=useState('')
   const [instagram,setInstagram]=useState('')
@@ -13,73 +13,56 @@ export default function Auth({ onAuth }){
   const [password,setPassword]=useState('')
   const [identifier,setIdentifier]=useState('')
 
-  const [fails, setFails] = useState(0)
-  const [recoverOpen, setRecoverOpen] = useState(false)
-
-  const login = (e)=>{
+  const submit=e=>{
     e.preventDefault()
-    const users = getUsers()
-    const u = users.find(u =>
-      (u.phone===identifier || u.email===identifier) &&
-      u.password===password
-    )
-    if(u){
-      setCurrentUser(u)
-      onAuth && onAuth(u)
-      setFails(0)
+    const users=getUsers()
+    if(mode==='register'){
+      if(!name||!phone||!password) return alert('Заполните все поля')
+      if(users.find(u=>u.phone===phone)) return alert('Такой номер уже зарегистрирован')
+      const user={name,instagram,phone,email,password}
+      users.push(user); saveUsers(users); setCurrentUser(user); onAuth?.(user)
     }else{
-      const f = fails+1
-      setFails(f)
-      if(f>=2) setRecoverOpen(true)
-      alert('Неверный логин или пароль')
+      const id=identifier.trim()
+      const user=users.find(u=>(u.phone===id||u.email===id)&&u.password===password)
+      if(!user) return alert('Неверный логин или пароль')
+      setCurrentUser(user); onAuth?.(user)
     }
   }
 
-  const register = (e)=>{
-    e.preventDefault()
-    if(!phone && !email) return alert('Нужен телефон или email')
-    const users = getUsers()
-    if(users.find(u => u.phone===phone || (email && u.email===email))){
-      return alert('Пользователь уже существует')
-    }
-    const u = { name, instagram, phone, email, password }
-    users.push(u); saveUsers(users); setCurrentUser(u); onAuth && onAuth(u)
-    setMode('login')
+  const logout=()=>{ setCurrentUser(null); onAuth?.(null) }
+  const current=getCurrentUser()
+
+  if(current){
+    return (
+      <div className="card">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
+          <div>
+            <div><b>{current.name}</b> <small className="muted">({current.phone})</small></div>
+            {current.email && <div><small className="muted">Email: {current.email}</small></div>}
+            {current.instagram && <div><small className="muted">Instagram: {current.instagram}</small></div>}
+          </div>
+          <button className="ghost" onClick={logout}>{t('logout')}</button>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="card" style={{marginBottom:16}}>
+    <div className="card">
       <div style={{display:'flex',gap:8,marginBottom:10}}>
-        <button className={mode==='login'?'':'ghost'} onClick={()=>setMode('login')}>Войти</button>
-        <button className={mode==='register'?'':'ghost'} onClick={()=>setMode('register')}>Регистрация</button>
+        <button className={mode==='login'?'':'ghost'} onClick={()=>setMode('login')}>{t('login')}</button>
+        <button className={mode==='register'?'':'ghost'} onClick={()=>setMode('register')}>{t('register')}</button>
       </div>
-
-      {mode==='login' ? (
-        <form onSubmit={login} className="row">
-          <div className="col">
-            <label>Телефон или email</label>
-            <input value={identifier} onChange={e=>setIdentifier(e.target.value)} placeholder="+3706... / email" />
-          </div>
-          <div className="col">
-            <label>Пароль</label>
-            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" />
-          </div>
-          <div className="col" style={{alignSelf:'end'}}>
-            <button type="submit">Войти</button>
-          </div>
-        </form>
-      ) : (
-        <form onSubmit={register} className="row">
-          <div className="col"><label>Имя</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Inga"/></div>
-          <div className="col"><label>Instagram</label><input value={instagram} onChange={e=>setInstagram(e.target.value)} placeholder="@username"/></div>
-          <div className="col"><label>Телефон</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+3706..."/></div>
-          <div className="col"><label>Email</label><input value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@example.com"/></div>
-          <div className="col"><label>Пароль</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••"/></div>
-          <div className="col" style={{alignSelf:'end'}}><button type="submit">Создать аккаунт</button></div>
-        </form>
-      )}
-
-      <ForgotPasswordModal open={recoverOpen} onClose={()=>setRecoverOpen(false)} />
+      <form onSubmit={submit} className="row">
+        {mode==='register'&&<div className="col"><label>{t('name')}</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Inga"/></div>}
+        {mode==='register'&&<div className="col"><label>{t('instagram')}</label><input value={instagram} onChange={e=>setInstagram(e.target.value)} placeholder="@username"/></div>}
+        {mode==='register'&&<div className="col"><label>{t('email_opt')}</label><input value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@example.com"/></div>}
+        {mode==='register'
+          ? <div className="col"><label>{t('phone')}</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+3706..."/></div>
+          : <div className="col"><label>{t('phone_or_email')}</label><input value={identifier} onChange={e=>setIdentifier(e.target.value)} placeholder="+3706... / email"/></div>}
+        <div className="col"><label>{t('password')}</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••"/></div>
+        <div className="col" style={{alignSelf:'end'}}><button type="submit">{mode==='login'?t('login'):t('register')}</button></div>
+      </form>
     </div>
   )
 }
