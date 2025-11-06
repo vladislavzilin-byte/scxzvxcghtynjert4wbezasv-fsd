@@ -42,10 +42,46 @@ export default function Auth({ onAuth }){
   const logout=()=>{ setCurrentUser(null); onAuth?.(null) }
   const current=getCurrentUser()
 
+  
   if(current){
     return (
-      <div className="card">
+      <div style={{
+        backdropFilter:'blur(18px)',
+        background: 'rgba(255,255,255,0.08)',
+        border:'1px solid rgba(255,255,255,0.25)',
+        borderRadius: '18px',
+        padding:'20px',
+        boxShadow:'0 4px 30px rgba(0,0,0,0.3)',
+        marginBottom:'20px'
+      }}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
+          <div>
+            <div style={{fontSize: '1.2rem', fontWeight:600}}>{current.name}</div>
+            <div style={{opacity:0.8, marginTop:4}}>📞 {current.phone}</div>
+            {current.email && <div style={{opacity:0.8}}>✉️ {current.email}</div>}
+            {current.instagram && <div style={{opacity:0.8}}>📸 {current.instagram}</div>}
+          </div>
+          <button 
+            onClick={logout}
+            style={{
+              padding:'8px 14px',
+              borderRadius:'10px',
+              border:'1px solid rgba(255,255,255,0.4)',
+              background:'rgba(255,255,255,0.12)',
+              color:'#fff',
+              cursor:'pointer',
+              transition:'0.2s'
+            }}
+            onMouseOver={e=>e.target.style.background='rgba(255,255,255,0.22)'}
+            onMouseOut={e=>e.target.style.background='rgba(255,255,255,0.12)'}
+          >
+            {t('logout')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+}>
           <div>
             <div><b>{current.name}</b> <small className="muted">({current.phone})</small></div>
             {current.email && <div><small className="muted">Email: {current.email}</small></div>}
