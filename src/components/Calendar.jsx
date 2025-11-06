@@ -29,7 +29,8 @@ export default function Calendar(){
   const [animDir, setAnimDir] = useState(0) // -1 влево, +1 вправо
   const touchStartX = useRef(null)
 
-  const minDate = new Date()
+  const today = toDateOnly(new Date())
+  const minDate = today // запрещаем всё, что меньше today
   const maxDate = addMonths(new Date(), 24)
 
   const monthStart = startOfMonth(currentMonth)
@@ -38,12 +39,15 @@ export default function Calendar(){
   const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
 
   const days = useMemo(()=>{
-    const arr=[]; let d=gridStart; while(d<=gridEnd){ arr.push(d); d=addDays(d,1) } return arr
-  }, [currentMonth]) // пересчитываем по месяцу
+    const arr=[]; let d=new Date(gridStart); while(d<=gridEnd){ arr.push(new Date(d)); d=addDays(d,1) } return arr
+  }, [currentMonth])
 
   const bookings = getBookings()
 
   const slotsForDay = (d) => {
+    // если день в прошлом — нет слотов
+    if(toDateOnly(d) < today) return []
+
     const [sh, sm] = settings.workStart.split(':').map(Number)
     const [eh, em] = settings.workEnd.split(':').map(Number)
     const start = new Date(d); start.setHours(sh, sm, 0, 0)
@@ -68,6 +72,12 @@ export default function Calendar(){
   }
 
   const book = (tSel) => {
+    // защита: запретить запись на времена в прошлом
+    if(toDateOnly(tSel) < today){
+      alert(t('cannot_book_past') || 'Нельзя записываться на прошедшие даты')
+      return
+    }
+
     const user = getCurrentUser()
     if(!user) { alert(t('login_or_register')); return }
     if(isTaken(tSel)) { alert(t('already_booked')); return }
@@ -87,7 +97,6 @@ export default function Calendar(){
       createdAt: new Date().toISOString()
     }
 
-    // имитация короткого процесса (лоудер видно)
     setTimeout(()=>{
       saveBookings([ ...bookings, newB ])
       setBookedISO(prev => [...prev, new Date(tSel)])
@@ -145,8 +154,8 @@ export default function Calendar(){
   }
 
   // UI хелперы
-  const isToday = (d) => isSameDay(toDateOnly(d), toDateOnly(new Date()))
-  const dateCellStyle = (d, idx, active) => {
+  const isToday = (d) => isSameDay(toDateOnly(d), today)
+  const dateCellStyle = (d, idx, active, isPast) => {
     const base = {
       borderRadius: 12,
       padding: '10px 0',
@@ -154,8 +163,15 @@ export default function Calendar(){
       transition: '0.2s',
       userSelect: 'none'
     }
+    // Past dates — визуально затемнены
+    if(isPast){
+      base.opacity = 0.38
+      base.filter = 'grayscale(30%)'
+      base.color = 'rgba(220,220,220,0.9)'
+    }
+
     // Aurora hover
-    if(hoverIdx === idx){
+    if(hoverIdx === idx && !isPast){
       base.boxShadow = '0 0 18px rgba(168,85,247,0.40)'
       base.background = 'rgba(98,0,180,0.18)'
       base.transform = 'translateY(-1px)'
@@ -177,7 +193,7 @@ export default function Calendar(){
     borderRadius: 10,
     padding: '8px 12px',
     border: '1px solid ' + (disabledLike ? 'rgba(180,180,200,0.25)' : 'rgba(168,85,247,0.45)'),
-    background: disabledLike ? 'rgba(255,255,255,0.06)' : 'rgba(98,0,180,0.18)',
+    background: disabledLike ? 'rgba(255,255,255,0.04)' : 'rgba(98,0,180,0.18)',
     color: '#fff',
     cursor: disabledLike ? 'default' : 'pointer',
     backdropFilter: 'blur(6px)',
@@ -186,7 +202,6 @@ export default function Calendar(){
 
   return (
     <div className="card" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      {/* встроенные стили/анимации для самодостаточности */}
       <style>{`
         @keyframes fadeSlideLeft { from{opacity:.0; transform: translateX(12px)} to{opacity:1; transform: translateX(0)} }
         @keyframes fadeSlideRight{ from{opacity:.0; transform: translateX(-12px)} to{opacity:1; transform: translateX(0)} }
@@ -194,7 +209,6 @@ export default function Calendar(){
         .month-enter-left { animation: fadeSlideLeft .35s ease both; }
         .month-enter-right{ animation: fadeSlideRight .35s ease both; }
 
-        /* модалка премиум */
         .modal-backdrop {
           position: fixed; inset: 0; background: rgba(0,0,0,0.55);
           display:flex; align-items:center; justify-content:center; z-index: 9999;
@@ -214,6 +228,15 @@ export default function Calendar(){
           border-top-color: rgba(168,85,247,0.9);
           animation: spin .8s linear infinite;
           display:inline-block; vertical-align:middle;
+        }
+
+        /* past-day mark: small dot */
+        .datebtn.past::after {
+          content: '';
+          display:block;
+          width:6px; height:6px; border-radius:50%;
+          background: rgba(150,150,170,0.4);
+          margin:6px auto 0;
         }
       `}</style>
 
@@ -257,16 +280,18 @@ export default function Calendar(){
           {days.map((d,idx)=>{
             const inMonth = isSameMonth(d,monthStart)
             const active  = isSameDay(d,selectedDate)
-            const disabled = toDateOnly(d) < toDateOnly(minDate) || toDateOnly(d) > toDateOnly(maxDate)
+            const isPast = toDateOnly(d) < today
+            const disabled = isPast || toDateOnly(d) > toDateOnly(maxDate)
+
             return (
               <div
                 key={idx}
-                className={'datebtn'+(active?' active':'')}
+                className={'datebtn'+(active?' active':'') + (isPast ? ' past' : '')}
                 onMouseEnter={()=>setHoverIdx(idx)}
                 onMouseLeave={()=>setHoverIdx(-1)}
                 onClick={()=>!disabled&&setSelectedDate(d)}
                 style={{
-                  ...dateCellStyle(d, idx, active),
+                  ...dateCellStyle(d, idx, active, isPast),
                   opacity: inMonth?1:.4,
                   cursor: disabled?'default':'pointer'
                 }}
