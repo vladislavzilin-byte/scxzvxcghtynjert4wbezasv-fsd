@@ -4,6 +4,14 @@ import { getLang, setLang } from './storage'
 
 export const dict = {
   ru: {
+
+    nav_profile: 'Профиль',
+    my_profile: 'Мой профиль',
+    save: 'Сохранить',
+    profile_saved: 'Данные сохранены',
+    profile_need_contact: 'Укажите телефон или email',
+    profile_login_hint: 'Войдите или зарегистрируйтесь, чтобы редактировать профиль',
+
     brand: 'IZ Booking',
     nav_calendar: 'Календарь',
     nav_my: 'Мои записи',

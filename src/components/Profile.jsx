@@ -1,47 +1,86 @@
-import React, { useState } from 'react';
-import { getCurrentUser, updateUser, saveCurrentUser } from '../utils/storage';
+
+import React, { useEffect, useState } from 'react'
+import { getCurrentUser, setCurrentUser, getUsers, saveUsers } from '../lib/storage'
+import { useI18n } from '../lib/i18n'
 
 export default function Profile(){
-  const me = getCurrentUser();
-  if(!me){ return <div className='card'><h3>Мой профиль</h3><p className='muted'>Войдите, чтобы редактировать профиль.</p></div>; }
+  const { t } = useI18n()
+  const [user, setUser] = useState(getCurrentUser())
+  const [msg, setMsg] = useState(null)
 
-  const [name,setName] = useState(me.name||'');
-  const [phone,setPhone] = useState(me.phone||'');
-  const [instagram,setInstagram] = useState(me.instagram||'');
-  const email = me.email || '';
+  useEffect(()=>{
+    setUser(getCurrentUser())
+  }, [])
 
-  const [oldPass,setOldPass] = useState('');
-  const [newPass,setNewPass] = useState('');
-  const [confirm,setConfirm] = useState('');
-  const [msg,setMsg] = useState('');
+  if(!user){
+    return (
+      <div className="card" style={{marginTop:16}}>
+        <h2>{t('my_profile')}</h2>
+        <p>{t('profile_login_hint')}</p>
+      </div>
+    )
+  }
 
-  const saveInfo = ()=>{
-    const u = { ...me, name, phone, instagram };
-    updateUser(u); saveCurrentUser(u); setMsg('Данные обновлены');
-  };
+  const [form, setForm] = useState({
+    name: user.name || '',
+    instagram: user.instagram || '',
+    phone: user.phone || '',
+    email: user.email || '',
+    password: user.password || ''
+  })
 
-  const changePassword = ()=>{
-    if(String(oldPass)!==String(me.password||'')){ setMsg('Старый пароль неверный'); return; }
-    if((newPass||'').length<4){ setMsg('Новый пароль слишком короткий'); return; }
-    if(newPass !== confirm){ setMsg('Подтверждение пароля не совпадает'); return; }
-    const u = { ...me, password:newPass };
-    updateUser(u); saveCurrentUser(u); setMsg('Пароль изменён'); setOldPass(''); setNewPass(''); setConfirm('');
-  };
+  const onChange = (k)=>(e)=> setForm(prev=>({...prev, [k]: e.target.value }))
+
+  const onSave = (e)=>{
+    e.preventDefault()
+    // basic checks
+    if(!form.phone && !form.email){
+      setMsg(t('profile_need_contact'))
+      return
+    }
+
+    // Update users array
+    const users = getUsers()
+    const idx = users.findIndex(u => (u.phone && u.phone===user.phone) || (u.email && u.email===user.email))
+    const updated = { ...users[idx>=0?idx:0], ...form }
+    if(idx>=0) users[idx] = updated; else users.push(updated)
+    saveUsers(users)
+
+    setCurrentUser(updated)
+    setUser(updated)
+    setMsg(t('profile_saved'))
+    setTimeout(()=>setMsg(null), 1500)
+  }
 
   return (
-    <div className='card'>
-      <h3>Мой профиль</h3>
-      <label>Имя</label><input value={name} onChange={e=>setName(e.target.value)} />
-      <label>Телефон</label><input value={phone} onChange={e=>setPhone(e.target.value)} />
-      <label>Email (нельзя изменить)</label><input value={email} disabled />
-      <label>Instagram</label><input value={instagram} onChange={e=>setInstagram(e.target.value)} />
-      <button onClick={saveInfo}>Сохранить изменения</button>
-      <h4>Смена пароля</h4>
-      <input type='password' placeholder='Старый пароль' value={oldPass} onChange={e=>setOldPass(e.target.value)} />
-      <input type='password' placeholder='Новый пароль' value={newPass} onChange={e=>setNewPass(e.target.value)} />
-      <input type='password' placeholder='Повторите новый пароль' value={confirm} onChange={e=>setConfirm(e.target.value)} />
-      <button onClick={changePassword}>Изменить пароль</button>
-      {msg && <p className='success' style={{marginTop:8}}>{msg}</p>}
+    <div className="card" style={{marginTop:16}}>
+      <h2>{t('my_profile')}</h2>
+      <form onSubmit={onSave} className="row">
+        <div className="col">
+          <label>{t('name')}</label>
+          <input value={form.name} onChange={onChange('name')} placeholder="Inga" />
+        </div>
+        <div className="col">
+          <label>{t('instagram')}</label>
+          <input value={form.instagram} onChange={onChange('instagram')} placeholder="@username" />
+        </div>
+        <div className="col">
+          <label>{t('phone')}</label>
+          <input value={form.phone} onChange={onChange('phone')} placeholder="+3706..." />
+        </div>
+        <div className="col">
+          <label>{t('email_opt')}</label>
+          <input value={form.email} onChange={onChange('email')} placeholder="name@example.com" />
+        </div>
+        <div className="col">
+          <label>{t('password')}</label>
+          <input type="password" value={form.password} onChange={onChange('password')} placeholder="••••••••" />
+        </div>
+        <div className="col" style={{alignSelf:'end'}}>
+          <button type="submit">{t('save')}</button>
+        </div>
+      </form>
+      {msg && <div className="notif success" style={{marginTop:8}}>{msg}</div>}
     </div>
-  );
+  )
 }
