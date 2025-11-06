@@ -78,20 +78,14 @@ export default function Auth({ onAuth }){
             {t('logout')}
           </button>
         </div>
-      </div>
-    )
-  }
-}>
-          <div>
-            <div><b>{current.name}</b> <small className="muted">({current.phone})</small></div>
-            {current.email && <div><small className="muted">Email: {current.email}</small></div>}
-            {current.instagram && <div><small className="muted">Instagram: {current.instagram}</small></div>}
-          </div>
-          <button className="ghost" onClick={logout}>{t('logout')}</button>
+   {current && (
+    <div className="profile-header-glass">
+        <div className="profile-row">
+            <b>{current.name}</b>
+            <small className="muted">{current.phone}</small>
         </div>
-      </div>
-    )
-  }
+    </div>
+)}
 
   return (
     <>
