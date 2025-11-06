@@ -11,7 +11,7 @@ export default function ForgotPasswordModal({ open, onClose }){
 
   const submit = e => {
     e.preventDefault()
-    const u = getUsers().find(x => x.phone === phone || x.email === phone)
+    const u = getUsers().find(x => x.phone === phone)
     if(!u) setFound({error:'Пользователь не найден'})
     else setFound({password:u.password})
   }
@@ -37,7 +37,7 @@ export default function ForgotPasswordModal({ open, onClose }){
             style={{width:'100%',padding:'10px 12px',borderRadius:8,marginBottom:10}}
             value={phone}
             onChange={e=>setPhone(e.target.value)}
-            placeholder="Телефон или Email"
+            placeholder="Ваш телефон"
           />
           <button style={{width:'100%',padding:'10px',borderRadius:8,background:'#6b46c1',color:'#fff',border:'none'}}>
             Найти
