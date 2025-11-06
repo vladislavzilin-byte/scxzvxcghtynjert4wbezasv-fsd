@@ -1,7 +1,12 @@
-
 import { useMemo, useState } from 'react'
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, isSameMonth, isSameDay, format } from 'date-fns'
-import { getBookings, saveBookings, getSettings, getCurrentUser, id, isSameMinute } from '../lib/storage'
+import {
+  startOfMonth, endOfMonth, startOfWeek, endOfWeek,
+  addDays, addMonths, isSameMonth, isSameDay, format
+} from 'date-fns'
+import {
+  getBookings, saveBookings, getSettings,
+  getCurrentUser, id, isSameMinute
+} from '../lib/storage'
 import { useI18n } from '../lib/i18n'
 
 function dayISO(d){ return new Date(d).toISOString().slice(0,10) }
@@ -9,6 +14,7 @@ function dayISO(d){ return new Date(d).toISOString().slice(0,10) }
 export default function Calendar(){
   const { t } = useI18n()
   const settings = getSettings()
+
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()))
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [busy, setBusy] = useState(false)
@@ -34,7 +40,7 @@ export default function Calendar(){
     const [sh, sm] = settings.workStart.split(':').map(Number)
     const [eh, em] = settings.workEnd.split(':').map(Number)
     const start = new Date(d); start.setHours(sh, sm, 0, 0)
-    const end = new Date(d); end.setHours(eh, em, 0, 0)
+    const end   = new Date(d); end.setHours(eh, em, 0, 0)
     const slots = []
     let cur = new Date(start)
     while(cur <= end){
@@ -58,67 +64,169 @@ export default function Calendar(){
     const user = getCurrentUser()
     if(!user) { alert(t('login_or_register')); return }
     if(isTaken(tSel)) { alert(t('already_booked')); return }
+
     setBusy(true)
     setProcessingISO(new Date(tSel))
     const end = new Date(tSel); end.setMinutes(end.getMinutes() + settings.slotMinutes)
-    const newB = { id:id(), userPhone:user.phone, userName:user.name, userInstagram:user.instagram||'', start:tSel, end, status:'pending', createdAt:new Date().toISOString() }
+
+    const newB = {
+      id: id(),
+      userPhone: user.phone,
+      userName: user.name,
+      userInstagram: user.instagram || '',
+      start: tSel,
+      end,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    }
+
     saveBookings([ ...bookings, newB ])
     setBookedISO(prev => [...prev, new Date(tSel)])
     setBusy(false)
     setProcessingISO(null)
-    setModal({ title: t('booked_success'), dateStr: format(tSel,'dd.MM.yyyy'), timeStr: format(tSel,'HH:mm')+' – '+format(end,'HH:mm'), caption: t('wait_confirmation')+' '+t('details_in_my') })
+    setModal({
+      title: t('booked_success'),
+      dateStr: format(tSel,'dd.MM.yyyy'),
+      timeStr: format(tSel,'HH:mm')+' – '+format(end,'HH:mm'),
+      caption: t('wait_confirmation')+' '+t('details_in_my')
+    })
   }
 
   const closeModal = () => setModal(null)
 
+  // ───────────────────────────
+  // Aurora-навигация календаря
+  // ───────────────────────────
+
+  const navBtnStyle = {
+    width: 130,
+    height: 46,
+    borderRadius: 14,
+    border: '1px solid rgba(168,85,247,0.40)',
+    background: 'rgba(31, 0, 63, 0.55)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    color: '#fff',
+    fontSize: 22,
+    cursor: 'pointer',
+    transition: '0.25s',
+    boxShadow: '0 0 18px rgba(138,43,226,0.25)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    userSelect: 'none'
+  }
+
+  const centerPillStyle = {
+    width: 130,
+    height: 46,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 14,
+    border: '1px solid rgba(168,85,247,0.40)',
+    background: 'linear-gradient(145deg, rgba(66,0,145,0.55), rgba(20,0,40,0.60))',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 600,
+    textAlign: 'center',
+    boxShadow: '0 0 18px rgba(138,43,226,0.25)',
+    letterSpacing: '0.5px'
+  }
+
+  const monthLabelRaw = format(currentMonth,'LLLL yyyy')
+  const monthLabel = monthLabelRaw.charAt(0).toUpperCase()+monthLabelRaw.slice(1)
+
   return (
     <div className="card">
-      <div style={{display:'flex',gap:8,alignItems:'center',justifyContent:'space-between'}}>
-        <button className="ghost" onClick={()=>setCurrentMonth(addMonths(currentMonth,-1))}>←</button>
-        <div className="badge">{format(currentMonth,'LLLL yyyy')}</div>
-        <button className="ghost" onClick={()=>setCurrentMonth(addMonths(currentMonth,1))}>→</button>
+
+      {/* NAVIGATION */}
+      <div style={{display:'flex',gap:16,alignItems:'center',justifyContent:'center',marginBottom:12}}>
+
+        <button
+          style={navBtnStyle}
+          onClick={()=>setCurrentMonth(addMonths(currentMonth,-1))}
+          aria-label="prev-month"
+        >
+          ←
+        </button>
+
+        <div style={centerPillStyle}>
+          {monthLabel}
+        </div>
+
+        <button
+          style={navBtnStyle}
+          onClick={()=>setCurrentMonth(addMonths(currentMonth,1))}
+          aria-label="next-month"
+        >
+          →
+        </button>
+
       </div>
 
       <div className="hr" />
 
+      {/* GRID */}
       <div className="grid">
-        {['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((w,i)=>(<div key={i} className="muted" style={{textAlign:'center',fontWeight:600}}>{w}</div>))}
+        {['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((w,i)=>(
+          <div key={i} className="muted" style={{textAlign:'center',fontWeight:600}}>{w}</div>
+        ))}
+
         {days.map((d,idx)=>{
-          const inMonth=isSameMonth(d,monthStart)
-          const active=isSameDay(d,selectedDate)
-          const disabled=d<new Date(minDate.toDateString())||d>maxDate
+          const inMonth = isSameMonth(d,monthStart)
+          const active  = isSameDay(d,selectedDate)
+          const disabled = d < new Date(minDate.toDateString()) || d > maxDate
           return (
-            <div key={idx} className={'datebtn '+(active?'active':'')} onClick={()=>!disabled&&setSelectedDate(d)}
-              style={{opacity:inMonth?1:.4,pointerEvents:disabled?'none':'auto'}}>{format(d,'d')}</div>
+            <div
+              key={idx}
+              className={'datebtn '+(active?'active':'')}
+              onClick={()=>!disabled&&setSelectedDate(d)}
+              style={{
+                opacity: inMonth?1:.4,
+                pointerEvents: disabled?'none':'auto'
+              }}
+            >
+              {format(d,'d')}
+            </div>
           )
         })}
       </div>
 
       <div className="hr" />
 
+      {/* SLOTS */}
       <div>
         <div className="badge">{t('slots_for')} {format(selectedDate,'dd.MM.yyyy')}</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:8}}>
           {slotsForDay(selectedDate).map(ti=>{
-            const taken=isTaken(ti)
+            const taken = isTaken(ti)
             const isProcessing = processingISO && isSameMinute(processingISO, ti)
             const isLocal = bookedISO.some(x => isSameMinute(x, ti))
             let label = format(ti,'HH:mm')
             if(isProcessing) label = t('processing')
             else if(taken || isLocal) label = t('reserved_label')
+
             return (
-              <button key={ti.toISOString()}
+              <button
+                key={ti.toISOString()}
                 disabled={taken||busy||isProcessing}
                 className={(taken||isLocal)?'ghost':'ok'}
-                onClick={()=>book(ti)}>
+                onClick={()=>book(ti)}
+              >
                 {label}
               </button>
             )
           })}
-          {slotsForDay(selectedDate).length===0 && <small className="muted">Нет доступных слотов</small>}
+          {slotsForDay(selectedDate).length===0 && (
+            <small className="muted">Нет доступных слотов</small>
+          )}
         </div>
       </div>
 
+      {/* MODAL */}
       {modal && (
         <div className="modal-backdrop" onClick={closeModal}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
