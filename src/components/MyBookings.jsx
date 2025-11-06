@@ -73,7 +73,7 @@ React.useEffect(()=>{
     return b.status
   }
 
-  return (
+  return (<>
     {profileCard}
     
     <div className="row">
@@ -102,7 +102,7 @@ React.useEffect(()=>{
             <tbody>
               {list.map(b=>{
                 const canCancel = (b.status==='pending' || b.status==='approved') && new Date(b.start)>new Date()
-                return (
+                return (<>
     {profileCard}
     
                   <tr key={b.id} style={{opacity: b.status==='approved' ? 1 : .9}}>
@@ -143,5 +143,5 @@ React.useEffect(()=>{
 )}
 
     </div>
-  )
+  </> )
 }
