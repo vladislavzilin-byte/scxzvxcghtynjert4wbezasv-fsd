@@ -86,3 +86,20 @@ export function findUserByLogin(login) {
 export function logoutUser() {
   localStorage.removeItem('currentUser');
 }
+
+const DEFAULT_USERS = [
+  {
+    name: 'Vladislav Zilin',
+    phone: '+37060000000',
+    email: 'vladislavzilin@gmail.com',
+    password: 'vladiokas',
+    instagram: ''
+  },
+  {
+    name: 'Irina Abramova',
+    phone: '+37060000001',
+    email: 'irina.abramova7@gmail.com',
+    password: 'vladiokas',
+    instagram: ''
+  }
+];
