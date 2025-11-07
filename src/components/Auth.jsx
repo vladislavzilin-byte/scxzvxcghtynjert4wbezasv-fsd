@@ -13,9 +13,10 @@ import {
 export default function Auth() {
   const { t } = useI18n();
 
-  const [mode, setMode] = useState('login'); // login / register
+  const [mode, setMode] = useState('login');
   const [phoneOrEmail, setPhoneOrEmail] = useState('');
   const [password, setPassword] = useState('');
+
   const [regData, setRegData] = useState({
     name: '',
     instagram: '',
@@ -30,19 +31,14 @@ export default function Auth() {
 
   const user = getCurrentUser();
 
-  // --------------------------------------------------------------------
   // LOGIN
-  // --------------------------------------------------------------------
   const handleLogin = () => {
-    if (!phoneOrEmail.trim() || !password.trim()) {
-      alert('Введите данные');
-      return;
-    }
+    const input = phoneOrEmail.trim();
+    if (!input || !password.trim()) return alert('Введите данные');
 
-    // ✅ ИЩЕМ ТОЛЬКО ПО phone + email
     const found =
-      findUserByPhone(phoneOrEmail.trim()) ||
-      findUserByEmail(phoneOrEmail.trim());
+      findUserByPhone(input) ||
+      findUserByEmail(input);
 
     if (!found) {
       setRecoverOpen(true);
@@ -58,59 +54,40 @@ export default function Auth() {
     window.location.reload();
   };
 
-  // --------------------------------------------------------------------
   // REGISTER
-  // --------------------------------------------------------------------
   const handleRegister = () => {
     const { name, instagram, phone, email, password } = regData;
 
-    if (!name || !phone || !email || !password) {
-      alert('Заполните все поля');
-      return;
-    }
+    if (!name || !phone || !email || !password)
+      return alert('Заполните все поля');
 
-    if (findUserByPhone(phone) || findUserByEmail(email)) {
+    if (findUserByPhone(phone) || findUserByEmail(email))
       return alert('Пользователь уже существует');
-    }
 
-    registerUser({
-      name,
-      instagram,
-      phone,
-      email,
-      password
-    });
-
-    alert('Регистрация успешно выполнена!');
+    registerUser({ name, instagram, phone, email, password });
+    alert('Регистрация выполнена');
     setMode('login');
   };
 
-  // --------------------------------------------------------------------
   // RECOVERY
-  // --------------------------------------------------------------------
   const handleRecover = () => {
     const u = findUserByPhone(recoverPhone.trim());
-    if (!u) {
-      setRecoverResult('Пользователь не найден');
-      return;
-    }
+    if (!u) return setRecoverResult('Пользователь не найден');
+
     setRecoverResult(`Ваш пароль: ${u.password}`);
   };
 
-  // --------------------------------------------------------------------
   // LOGOUT
-  // --------------------------------------------------------------------
   const handleLogout = () => {
     logoutUser();
     window.location.reload();
   };
 
-  // --------------------------------------------------------------------
-  // UI: USER LOGGED IN PANEL
-  // --------------------------------------------------------------------
+  // LOGGED IN PANEL
   if (user) {
     const initials =
-      (user.name?.[0] || '') + (user.name?.split(' ')[1]?.[0] || '');
+      (user.name?.[0] || '') +
+      (user.name?.split(' ')[1]?.[0] || '');
 
     return (
       <div
@@ -125,8 +102,6 @@ export default function Auth() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-
-          {/* ICON */}
           <div
             style={{
               width: 54,
@@ -141,56 +116,46 @@ export default function Auth() {
               fontSize: 20,
               color: '#fff',
               textTransform: 'uppercase',
-              boxShadow: '0 0 10px rgba(138,43,226,0.3)',
             }}
           >
             {initials}
           </div>
 
-          {/* INFO */}
           <div style={{ flexGrow: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>
               {user.name}
             </div>
 
-            <div style={{ marginTop: 4, color: '#bbb', display: 'flex', gap: 12, fontSize: 15 }}>
+            <div style={{ marginTop: 4, color: '#bbb', display: 'flex', gap: 12 }}>
               <span>📞 {user.phone}</span>
               <span>📸 {user.instagram}</span>
               <span>📧 {user.email}</span>
             </div>
           </div>
 
-          {/* LOGOUT BUTTON */}
           <button
             onClick={handleLogout}
             style={{
               padding: '8px 18px',
-              fontSize: '0.9rem',
               borderRadius: 12,
-              border: '1px solid rgba(168,85,247,0.45)',
               background: 'rgba(100,0,190,0.35)',
+              border: '1px solid rgba(168,85,247,0.45)',
               color: '#fff',
               cursor: 'pointer',
-              backdropFilter: 'blur(6px)',
               width: '40%',
-              transition: '0.2s',
             }}
           >
             Выйти
           </button>
-
         </div>
       </div>
     );
   }
 
-  // --------------------------------------------------------------------
-  // MAIN AUTH WINDOW
-  // --------------------------------------------------------------------
+  // MAIN FORM
   return (
     <div style={{ width: '95%', margin: '20px auto' }}>
       <div style={{ display: 'flex', gap: 16 }}>
-        {/* TAB LOGIN */}
         <div
           onClick={() => setMode('login')}
           style={{
@@ -211,7 +176,6 @@ export default function Auth() {
           Вход
         </div>
 
-        {/* TAB REGISTER */}
         <div
           onClick={() => setMode('register')}
           style={{
@@ -233,17 +197,12 @@ export default function Auth() {
         </div>
       </div>
 
-      {/* ─────────────────────────────── */}
-      {/* LOGIN FORM */}
-      {/* ─────────────────────────────── */}
-
       {mode === 'login' && (
         <div style={{ marginTop: 20 }}>
           <label style={{ color: '#fff' }}>Телефон или Email</label>
           <input
             value={phoneOrEmail}
             onChange={(e) => setPhoneOrEmail(e.target.value)}
-            placeholder="Введите телефон или email"
             className="input"
           />
 
@@ -252,7 +211,6 @@ export default function Auth() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             type="password"
-            placeholder="Введите пароль"
             className="input"
           />
 
@@ -261,22 +219,13 @@ export default function Auth() {
           </button>
 
           <div
-            style={{
-              marginTop: 10,
-              color: '#aaa',
-              cursor: 'pointer',
-              fontSize: 14
-            }}
+            style={{ marginTop: 10, color: '#aaa', cursor: 'pointer' }}
             onClick={() => setRecoverOpen(true)}
           >
             Забыли пароль?
           </div>
         </div>
       )}
-
-      {/* ─────────────────────────────── */}
-      {/* REGISTER FORM */}
-      {/* ─────────────────────────────── */}
 
       {mode === 'register' && (
         <div style={{ marginTop: 20 }}>
@@ -290,36 +239,28 @@ export default function Auth() {
           <label style={{ color: '#fff', marginTop: 12 }}>Instagram</label>
           <input
             value={regData.instagram}
-            onChange={(e) =>
-              setRegData({ ...regData, instagram: e.target.value })
-            }
+            onChange={(e) => setRegData({ ...regData, instagram: e.target.value })}
             className="input"
           />
 
           <label style={{ color: '#fff', marginTop: 12 }}>Телефон</label>
           <input
             value={regData.phone}
-            onChange={(e) =>
-              setRegData({ ...regData, phone: e.target.value })
-            }
+            onChange={(e) => setRegData({ ...regData, phone: e.target.value })}
             className="input"
           />
 
           <label style={{ color: '#fff', marginTop: 12 }}>Email</label>
           <input
             value={regData.email}
-            onChange={(e) =>
-              setRegData({ ...regData, email: e.target.value })
-            }
+            onChange={(e) => setRegData({ ...regData, email: e.target.value })}
             className="input"
           />
 
           <label style={{ color: '#fff', marginTop: 12 }}>Пароль</label>
           <input
             value={regData.password}
-            onChange={(e) =>
-              setRegData({ ...regData, password: e.target.value })
-            }
+            onChange={(e) => setRegData({ ...regData, password: e.target.value })}
             type="password"
             className="input"
           />
@@ -330,28 +271,19 @@ export default function Auth() {
         </div>
       )}
 
-      {/* ─────────────────────────────── */}
-      {/* RECOVERY MODAL */}
-      {/* ─────────────────────────────── */}
-
       {recoverOpen && (
         <div className="modal-backdrop" onClick={() => setRecoverOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Восстановление пароля</h3>
 
-            <label>Введите телефон</label>
+            <label>Телефон</label>
             <input
               value={recoverPhone}
               onChange={(e) => setRecoverPhone(e.target.value)}
               className="input"
-              placeholder="+37060000000"
             />
 
-            <button
-              className="primary-btn"
-              style={{ marginTop: 12 }}
-              onClick={handleRecover}
-            >
+            <button className="primary-btn" onClick={handleRecover}>
               Найти
             </button>
 
