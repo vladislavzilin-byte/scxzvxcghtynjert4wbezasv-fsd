@@ -26,3 +26,20 @@ export function fmtTime(d){ return new Date(d).toLocaleTimeString('ru-RU',{hour:
 // language
 export function getLang(){ return localStorage.getItem(LS_LANG) || 'ru' }
 export function setLang(l){ localStorage.setItem(LS_LANG, l) }
+
+// Найти по телефону
+export function findUserByPhone(phone){
+  return getUsers().find(u => u.phone === phone) || null;
+}
+
+// Найти по email
+export function findUserByEmail(email){
+  return getUsers().find(u => u.email === email) || null;
+}
+
+// Найти по телефону ИЛИ email (универсальный логин)
+export function findUserByLogin(login){
+  return getUsers().find(
+    u => u.phone === login || u.email === login
+  ) || null;
+}
