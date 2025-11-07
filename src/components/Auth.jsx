@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useI18n } from '../lib/i18n';
 
 import {
-  getCurrentUser,
-  setCurrentUser,
   getUsers,
   saveUsers,
+  findUserByPhone,
+  findUserByEmail,
   findUserByLogin,
-  findUserByPhone,   // ✅ добавлено
-  findUserByEmail    // ✅ добавлено
+  getCurrentUser,
+  setCurrentUser,
+  logoutUser
 } from '../utils/storage';
 
 export default function Auth() {
