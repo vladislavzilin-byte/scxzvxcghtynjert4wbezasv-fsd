@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useI18n } from '../lib/i18n';
 
 import {
@@ -10,9 +10,11 @@ import {
   getCurrentUser,
   saveCurrentUser,
   logoutUser
+  ensureDefaultAdmins
 } from '../utils/storage';
 
 export default function Auth() {
+  useEffect(() => { try { ensureDefaultAdmins(); } catch(e){} }, []);
   const { t } = useI18n();
 
   const [mode, setMode] = useState('login');

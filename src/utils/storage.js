@@ -2,10 +2,10 @@
 // USERS
 // ======================
 export function getUsers() {
-  try { 
-    return JSON.parse(localStorage.getItem('users') || '[]'); 
-  } catch (e) { 
-    return []; 
+  try {
+    return JSON.parse(localStorage.getItem('users') || '[]');
+  } catch (e) {
+    return [];
   }
 }
 
@@ -17,10 +17,10 @@ export function saveUsers(list) {
 // CURRENT USER
 // ======================
 export function getCurrentUser() {
-  try { 
-    return JSON.parse(localStorage.getItem('currentUser') || 'null'); 
-  } catch (e) { 
-    return null; 
+  try {
+    return JSON.parse(localStorage.getItem('currentUser') || 'null');
+  } catch (e) {
+    return null;
   }
 }
 
@@ -37,7 +37,6 @@ export function saveCurrentUser(u) {
 // ======================
 export function updateUser(updated) {
   const list = getUsers();
-
   const i = list.findIndex(u =>
     (u.email && updated.email && u.email === updated.email) ||
     (u.phone && updated.phone && u.phone === updated.phone)
@@ -59,12 +58,11 @@ export function updateUser(updated) {
   ) {
     saveCurrentUser({ ...me, ...updated });
   }
-
   return true;
 }
 
 // ======================
-// 🔍 FIND USER HELPERS
+// FIND HELPERS
 // ======================
 export function findUserByPhone(phone) {
   return getUsers().find(u => u.phone === phone) || null;
@@ -75,31 +73,51 @@ export function findUserByEmail(email) {
 }
 
 export function findUserByLogin(login) {
-  return getUsers().find(
-    u => u.phone === login || u.email === login
-  ) || null;
+  return getUsers().find(u => (u.phone === login || u.email === login)) || null;
 }
 
 // ======================
-// 🚪 LOGOUT
+// LOGOUT
 // ======================
 export function logoutUser() {
   localStorage.removeItem('currentUser');
 }
 
-const DEFAULT_USERS = [
+// ======================
+// DEFAULT ADMINS + ENSURE
+// ======================
+const DEFAULT_ADMINS = [
   {
     name: 'Vladislav Zilin',
     phone: '+37060000000',
     email: 'vladislavzilin@gmail.com',
     password: 'vladiokas',
-    instagram: ''
+    instagram: '',
+    isAdmin: true
   },
   {
     name: 'Irina Abramova',
     phone: '+37060000001',
     email: 'irina.abramova7@gmail.com',
     password: 'vladiokas',
-    instagram: ''
+    instagram: '',
+    isAdmin: true
   }
 ];
+
+export function ensureDefaultAdmins() {
+  const users = getUsers();
+  let changed = false;
+  DEFAULT_ADMINS.forEach(admin => {
+    const existing = users.find(u => u.email === admin.email || u.phone === admin.phone);
+    if (!existing) {
+      users.push(admin);
+      changed = true;
+    } else {
+      // keep user data but enforce admin fields
+      Object.assign(existing, { ...existing, ...admin });
+      changed = true;
+    }
+  });
+  if (changed) saveUsers(users);
+}
