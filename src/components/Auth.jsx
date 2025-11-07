@@ -8,183 +8,225 @@ import {
   findUserByEmail,
   findUserByLogin,
   getCurrentUser,
-  setCurrentUser,
+  saveCurrentUser,
   logoutUser
 } from '../utils/storage';
 
 export default function Auth() {
   const { t } = useI18n();
 
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState('login'); // login | register
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+
+  // Registration fields
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regInstagram, setRegInstagram] = useState('');
 
+  // Recovery
   const [foundPass, setFoundPass] = useState(null);
   const [recoveryPhone, setRecoveryPhone] = useState('');
   const [recoveryOpen, setRecoveryOpen] = useState(false);
 
   const user = getCurrentUser();
 
-  // ───────────────────────────────
+  // --------------------------
   // LOGIN
-  // ───────────────────────────────
-  const doLogin = () => {
-    const u = findUserByLogin(login.trim());
-    if (!u || u.password !== password.trim()) {
-      setRecoveryOpen(true);   // ✅ включаем окно восстановления
-      return;
-    }
-    setCurrentUser(u);
+  // --------------------------
+  const handleLogin = () => {
+    if (!login || !password) return alert(t('fill_all'));
+
+    const found = findUserByLogin(login);
+    if (!found)
+      return alert(t('user_not_found'));
+
+    if (found.password !== password)
+      return alert(t('wrong_password'));
+
+    saveCurrentUser(found);
+    window.location.reload();
   };
 
-  // ───────────────────────────────
+  // --------------------------
   // REGISTER
-  // ───────────────────────────────
-  const doRegister = () => {
-    if (!regName || !regPhone || !regEmail || !password) {
-      alert('Заполните все поля');
-      return;
-    }
+  // --------------------------
+  const handleRegister = () => {
+    if (!regName || !regPhone || !regEmail || !password)
+      return alert(t('fill_all'));
 
-    const users = getUsers();
-    if (users.some(u => u.phone === regPhone)) {
-      alert('Этот номер уже зарегистрирован');
-      return;
-    }
-    if (users.some(u => u.email === regEmail)) {
-      alert('Этот email уже зарегистрирован');
-      return;
-    }
+    const existsPhone = findUserByPhone(regPhone);
+    const existsMail = findUserByEmail(regEmail);
+
+    if (existsPhone) return alert(t('phone_exists'));
+    if (existsMail) return alert(t('email_exists'));
 
     const newUser = {
       name: regName,
       phone: regPhone,
       email: regEmail,
       instagram: regInstagram,
-      password,
+      password
     };
 
-    saveUsers([...users, newUser]);
-    setCurrentUser(newUser);
-    alert('Регистрация прошла успешно!');
+    saveUsers([...getUsers(), newUser]);
+    saveCurrentUser(newUser);
+
+    window.location.reload();
   };
 
-  // ───────────────────────────────
-  // LOGOUT
-  // ───────────────────────────────
-  const logout = () => setCurrentUser(null);
-
-  // ───────────────────────────────
-  // RECOVERY (по телефону)
-  // ───────────────────────────────
-  const searchPass = () => {
-    const u = findUserByPhone(recoveryPhone.trim());
-    if (!u) {
-      setFoundPass('Пользователь не найден');
-      return;
+  // --------------------------
+  // PASSWORD RECOVERY
+  // --------------------------
+  const handleRecovery = () => {
+    const found = findUserByPhone(recoveryPhone);
+    if (!found) {
+      setFoundPass(null);
+      return alert(t('user_not_found'));
     }
-    setFoundPass(u.password); // ✅ показываем пароль
+    setFoundPass(found.password);
   };
 
-  // ───────────────────────────────
-  // UI
-  // ───────────────────────────────
+  // --------------------------
+  // LOGOUT
+  // --------------------------
+  const handleLogout = () => {
+    logoutUser();
+    window.location.reload();
+  };
 
+  // --------------------------
+  // UI
+  // --------------------------
   if (user) {
     return (
-      <div className="logoutCard">
-        <div className="logoutRow">
-          <div className="avatar">{user.name.slice(0,2).toUpperCase()}</div>
-          <div className="infoCol">
-            <b>{user.name}</b>
-            <div>{user.phone}</div>
-            <div>{user.instagram && '@'+user.instagram}</div>
-            <div>{user.email}</div>
-          </div>
-          <button className="logoutBtn" onClick={logout}>
-            {t('logout')}
-          </button>
-        </div>
+      <div className="card" style={{ padding: 20 }}>
+        <h2>{user.name}</h2>
+        <p>{user.phone}</p>
+        <p>{user.email}</p>
+        {user.instagram && <p>@{user.instagram}</p>}
+        <button onClick={handleLogout} className="ok" style={{ marginTop: 10 }}>
+          {t('logout')}
+        </button>
       </div>
     );
   }
 
-  // ───────────────────────────────
-  // LOGIN / REGISTER SCREEN
-  // ───────────────────────────────
-
   return (
-    <div className="authCard">
-      <div className="tabRow">
-        <button className={mode==='login'?'tabActive':''} onClick={()=>setMode('login')}>
-          Вход
+    <div className="card" style={{ padding: 20 }}>
+
+      {/* SWITCH TABS */}
+      <div style={{ display: 'flex', marginBottom: 20, gap: 10 }}>
+        <button
+          className={mode === 'login' ? 'ok' : 'ghost'}
+          style={{ flex: 1 }}
+          onClick={() => setMode('login')}
+        >
+          {t('login')}
         </button>
-        <button className={mode==='register'?'tabActive':''} onClick={()=>setMode('register')}>
-          Регистрация
+        <button
+          className={mode === 'register' ? 'ok' : 'ghost'}
+          style={{ flex: 1 }}
+          onClick={() => setMode('register')}
+        >
+          {t('register')}
         </button>
       </div>
 
       {mode === 'login' && (
-        <>
-          <label>Телефон или Email</label>
-          <input value={login} onChange={e=>setLogin(e.target.value)} />
+        <div>
+          <label>{t('phone_or_email')}</label>
+          <input
+            value={login}
+            onChange={e => setLogin(e.target.value)}
+            placeholder="+37060000000 / email"
+          />
 
-          <label>Пароль</label>
-          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} />
+          <label>{t('password')}</label>
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
 
-          <button className="submitBtn" onClick={doLogin}>Вход</button>
-        </>
-      )}
+          <button onClick={handleLogin} className="ok" style={{ marginTop: 10 }}>
+            {t('login')}
+          </button>
 
-      {mode === 'register' && (
-        <>
-          <label>Имя</label>
-          <input value={regName} onChange={e=>setRegName(e.target.value)} />
-
-          <label>Телефон</label>
-          <input value={regPhone} onChange={e=>setRegPhone(e.target.value)} />
-
-          <label>Email</label>
-          <input value={regEmail} onChange={e=>setRegEmail(e.target.value)} />
-
-          <label>Instagram</label>
-          <input value={regInstagram} onChange={e=>setRegInstagram(e.target.value)} />
-
-          <label>Пароль</label>
-          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-
-          <button className="submitBtn" onClick={doRegister}>Зарегистрироваться</button>
-        </>
-      )}
-
-      {/* ──────────────── RECOVERY MODAL ──────────────── */}
-      {recoveryOpen && (
-        <div className="modal-backdrop" onClick={() => setRecoveryOpen(false)}>
-          <div className="modal" onClick={e=>e.stopPropagation()}>
-            <h3>Восстановление пароля</h3>
-
-            <label>Введите телефон</label>
-            <input
-              value={recoveryPhone}
-              onChange={e=>setRecoveryPhone(e.target.value)}
-            />
-
-            <button onClick={searchPass}>Найти</button>
-
-            {foundPass && (
-              <div className="passBox">
-                Ваш пароль: <b>{foundPass}</b>
-              </div>
-            )}
-
-            <button onClick={()=>setRecoveryOpen(false)}>Закрыть</button>
+          <div style={{ marginTop: 10 }}>
+            <small
+              className="muted"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setRecoveryOpen(true)}
+            >
+              {t('forgot_password')}
+            </small>
           </div>
         </div>
       )}
+
+      {mode === 'register' && (
+        <div>
+          <label>{t('name')}</label>
+          <input value={regName} onChange={e => setRegName(e.target.value)} />
+
+          <label>{t('phone')}</label>
+          <input value={regPhone} onChange={e => setRegPhone(e.target.value)} />
+
+          <label>Email</label>
+          <input value={regEmail} onChange={e => setRegEmail(e.target.value)} />
+
+          <label>Instagram</label>
+          <input value={regInstagram} onChange={e => setRegInstagram(e.target.value)} />
+
+          <label>{t('password')}</label>
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+
+          <button onClick={handleRegister} className="ok" style={{ marginTop: 10 }}>
+            {t('register')}
+          </button>
+        </div>
+      )}
+
+      {/* PASSWORD RECOVERY MODAL */}
+      {recoveryOpen && (
+        <div className="modal-backdrop" onClick={() => setRecoveryOpen(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>{t('password_recovery')}</h3>
+
+            <label>{t('enter_phone')}</label>
+            <input
+              value={recoveryPhone}
+              onChange={e => setRecoveryPhone(e.target.value)}
+              placeholder="+37060000000"
+            />
+
+            <button onClick={handleRecovery} className="ok" style={{ marginTop: 10 }}>
+              {t('find')}
+            </button>
+
+            {foundPass && (
+              <div style={{ marginTop: 10 }}>
+                <b>{t('your_password')}:</b> {foundPass}
+              </div>
+            )}
+
+            <button
+              onClick={() => setRecoveryOpen(false)}
+              className="ghost"
+              style={{ marginTop: 15 }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
