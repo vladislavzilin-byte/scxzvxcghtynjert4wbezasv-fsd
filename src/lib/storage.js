@@ -1,7 +1,21 @@
-
 const LS_USERS='iz.users.v7'; const LS_BOOKINGS='iz.bookings.v7'; const LS_CURRENT='iz.current.v7'; const LS_SETTINGS='iz.settings.v7'; const LS_LANG='iz.lang.v7';
 
-const DEFAULT_USERS=[{ name:'Vladislav Zilin', phone:'+37060000000', email:'vladislavzilin@gmail.com', password:'vladiokas', instagram:'' }];
+const DEFAULT_USERS = [
+  {
+    name: 'Vladislav Zilin',
+    phone: '+37060000000',
+    email: 'vladislavzilin@gmail.com',
+    password: 'vladiokas',
+    instagram: ''
+  },
+  {
+    name: 'Irina Abramova',
+    phone: '+37060000001',
+    email: 'irina.abramova7@gmail.com',
+    password: 'vladiokas',
+    instagram: ''
+  }
+];
 
 export function getUsers(){ const u=JSON.parse(localStorage.getItem(LS_USERS)||'null'); if(!u){ localStorage.setItem(LS_USERS, JSON.stringify(DEFAULT_USERS)); return DEFAULT_USERS } return u }
 export function saveUsers(u){ localStorage.setItem(LS_USERS, JSON.stringify(u)) }
@@ -26,3 +40,25 @@ export function fmtTime(d){ return new Date(d).toLocaleTimeString('ru-RU',{hour:
 // language
 export function getLang(){ return localStorage.getItem(LS_LANG) || 'ru' }
 export function setLang(l){ localStorage.setItem(LS_LANG, l) }
+
+// Найти по телефону
+export function findUserByPhone(phone){
+  return getUsers().find(u => u.phone === phone) || null;
+}
+
+// Найти по email
+export function findUserByEmail(email){
+  return getUsers().find(u => u.email === email) || null;
+}
+
+// Найти по телефону ИЛИ email
+export function findUserByLogin(login){
+  return getUsers().find(
+    u => u.phone === login || u.email === login
+  ) || null;
+}
+
+// logout
+export function logoutUser(){
+  localStorage.removeItem(LS_CURRENT)
+}
