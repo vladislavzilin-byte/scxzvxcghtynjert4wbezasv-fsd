@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '../lib/i18n';
 
 import {
@@ -8,64 +8,75 @@ import {
   findUserByEmail,
   findUserByLogin,
   getCurrentUser,
-  setCurrentUser,
+  saveCurrentUser,
   logoutUser
 } from '../utils/storage';
 
 export default function Auth() {
   const { t } = useI18n();
 
-  // ✅ Авто-добавление администратора (Irina)
-  useEffect(() => {
-    const users = getUsers();
-    const exists = users.find(u => u.email === "irina.abramova7@gmail.com");
-    if (!exists) {
-      users.push({
-        name: "Irina Abramova",
-        phone: "+00000000000",
-        email: "irina.abramova7@gmail.com",
-        password: "vladiokas",
-        instagram: ""
-      });
-      saveUsers(users);
-    }
-  }, []);
-
   const [mode, setMode] = useState('login');
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regInstagram, setRegInstagram] = useState('');
-  const [regPassword, setRegPassword] = useState('');
 
+  const [foundPass, setFoundPass] = useState(null);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
   const [recoveryPhone, setRecoveryPhone] = useState('');
-  const [foundPass, setFoundPass] = useState(null);
 
   const user = getCurrentUser();
 
-  // ✅ LOGIN FUNCTION
-  const doLogin = () => {
+  const auroraField = {
+    background: 'rgba(20,0,40,0.45)',
+    border: '1px solid rgba(168,85,247,0.35)',
+    color: '#fff',
+    borderRadius: 12,
+    padding: '10px 14px',
+    width: '100%',
+    outline: 'none',
+    fontSize: 15,
+    backdropFilter: 'blur(6px)'
+  };
+
+  const auroraButton = {
+    background: 'linear-gradient(135deg, #6a00ff, #3c0066)',
+    border: '1px solid rgba(168,85,247,0.5)',
+    borderRadius: 12,
+    padding: '12px 14px',
+    width: '100%',
+    color: '#fff',
+    fontSize: 16,
+    cursor: 'pointer',
+    marginTop: 10,
+    textAlign: 'center',
+    fontWeight: 600,
+    boxShadow: '0 0 15px rgba(138,43,226,0.35)',
+    transition: '0.25s'
+  };
+
+  const loginHandler = () => {
     const u = findUserByLogin(login.trim());
+
     if (!u) {
-      alert("Неверный логин или пароль");
+      alert(t('user_not_found'));
       return;
     }
+
     if (u.password !== password.trim()) {
-      alert("Неверный пароль");
+      alert(t('wrong_password'));
       return;
     }
-    setCurrentUser(u);
+
+    saveCurrentUser(u);
     window.location.reload();
   };
 
-  // ✅ REGISTER FUNCTION
-  const doRegister = () => {
-    if (!regName || !regPhone || !regEmail || !regPassword) {
-      alert("Заполните все поля");
+  const registerHandler = () => {
+    if (!regName.trim() || !regPhone.trim() || !regEmail.trim() || !password.trim()) {
+      alert(t('fill_all_fields'));
       return;
     }
 
@@ -73,186 +84,141 @@ export default function Auth() {
     const existsEmail = findUserByEmail(regEmail.trim());
 
     if (existsPhone || existsEmail) {
-      alert("Пользователь уже существует");
+      alert(t('user_exists'));
       return;
     }
 
-    const users = getUsers();
-    users.push({
+    const newUser = {
       name: regName.trim(),
       phone: regPhone.trim(),
       email: regEmail.trim(),
-      instagram: regInstagram.trim(),
-      password: regPassword.trim()
-    });
-    saveUsers(users);
+      password: password.trim(),
+      instagram: regInstagram.trim()
+    };
 
-    alert("Регистрация успешно завершена!");
-    setMode('login');
-  };
-
-  // ✅ RECOVERY FUNCTION
-  const doRecovery = () => {
-    const user = findUserByPhone(recoveryPhone.trim());
-    if (!user) {
-      setFoundPass("Телефон не найден");
-      return;
-    }
-    setFoundPass(user.password);
-  };
-
-  // ✅ LOGOUT
-  const logout = () => {
-    logoutUser();
+    const list = getUsers();
+    list.push(newUser);
+    saveUsers(list);
+    saveCurrentUser(newUser);
     window.location.reload();
   };
 
-  // ✅ AURORA STYLE (единый стиль для всего UI)
-  const auroraInput = {
-    width: "100%",
-    padding: "14px 18px",
-    background: "rgba(20,0,40,0.55)",
-    border: "1px solid rgba(168,85,247,0.35)",
-    borderRadius: "14px",
-    color: "#fff",
-    outline: "none",
-    fontSize: "15px",
-    backdropFilter: "blur(6px)",
-    WebkitBackdropFilter: "blur(6px)",
-    marginBottom: "14px",
+  const recover = () => {
+    const u = findUserByLogin(recoveryPhone.trim());
+    if (!u) {
+      alert(t('user_not_found'));
+      return;
+    }
+    setFoundPass(u.password);
   };
 
-  const auroraButton = {
-    width: "100%",
-    padding: "14px",
-    borderRadius: "14px",
-    background: "linear-gradient(90deg, #5b21b6, #7c3aed)",
-    border: "1px solid rgba(168,85,247,0.45)",
-    color: "#fff",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: "600",
-    marginTop: "10px",
-    transition: "0.25s",
-  };
+  // UI ----------------------------------------------------------------------
 
   return (
-    <div className="card" style={{ padding: 25 }}>
+    <div className="card" style={{ padding: 20 }}>
 
-      {/* ✅ SWITCH LOGIN / REGISTER */}
-      <div style={{
-        display: "flex",
-        marginBottom: 20,
-        gap: 14
-      }}>
-        <div
-          onClick={() => setMode("login")}
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
+        <button
+          onClick={() => setMode('login')}
           style={{
-            flex: 1,
-            padding: "16px",
-            borderRadius: "14px",
-            textAlign: "center",
-            border: mode === "login"
-              ? "2px solid rgba(168,85,247,0.55)"
-              : "1px solid rgba(168,85,247,0.25)",
-            background: mode === "login"
-              ? "linear-gradient(90deg,#6d28d9,#8b5cf6)"
-              : "rgba(20,0,40,0.55)",
-            cursor: "pointer",
-            color: "#fff"
-          }}>Вход</div>
+            ...auroraButton,
+            background: mode === 'login'
+              ? 'linear-gradient(135deg,#7b36ff,#4a007a)'
+              : 'rgba(50,0,80,0.4)',
+            width: '50%'
+          }}
+        >
+          Вход
+        </button>
 
-        <div
-          onClick={() => setMode("register")}
+        <button
+          onClick={() => setMode('register')}
           style={{
-            flex: 1,
-            padding: "16px",
-            borderRadius: "14px",
-            textAlign: "center",
-            border: mode === "register"
-              ? "2px solid rgba(168,85,247,0.55)"
-              : "1px solid rgba(168,85,247,0.25)",
-            background: mode === "register"
-              ? "linear-gradient(90deg,#6d28d9,#8b5cf6)"
-              : "rgba(20,0,40,0.55)",
-            cursor: "pointer",
-            color: "#fff"
-          }}>Регистрация</div>
+            ...auroraButton,
+            background: mode === 'register'
+              ? 'linear-gradient(135deg,#7b36ff,#4a007a)'
+              : 'rgba(50,0,80,0.4)',
+            width: '50%'
+          }}
+        >
+          Регистрация
+        </button>
       </div>
 
-      {/* ✅ LOGIN FORM */}
-      {mode === "login" && (
-        <div>
+      {/* LOGIN */}
+      {mode === 'login' && (
+        <>
+          <label>Телефон или Email</label>
           <input
-            style={auroraInput}
+            style={auroraField}
             placeholder="+3706... / email"
             value={login}
-            onChange={(e) => setLogin(e.target.value)}
+            onChange={e => setLogin(e.target.value)}
           />
 
+          <label style={{ marginTop: 10 }}>Пароль</label>
           <input
-            style={auroraInput}
+            style={auroraField}
             type="password"
-            placeholder="Ваш пароль"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
           />
 
-          <button style={auroraButton} onClick={doLogin}>Вход</button>
+          <button style={auroraButton} onClick={loginHandler}>
+            Вход
+          </button>
 
           <div
-            style={{ marginTop: 14, color: "#aaa", cursor: "pointer" }}
+            style={{ marginTop: 10, cursor: 'pointer', opacity: 0.8 }}
             onClick={() => setRecoveryOpen(true)}
           >
-            Забыли пароль?
+            forgot_password
           </div>
-        </div>
+        </>
       )}
 
-      {/* ✅ REGISTER FORM */}
-      {mode === "register" && (
-        <div>
-          <input style={auroraInput} placeholder="Имя" value={regName} onChange={(e) => setRegName(e.target.value)} />
+      {/* REGISTER */}
+      {mode === 'register' && (
+        <>
+          <label>Имя</label>
+          <input style={auroraField} value={regName} onChange={e => setRegName(e.target.value)} />
 
-          <input style={auroraInput} placeholder="Телефон" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} />
+          <label style={{ marginTop: 10 }}>Телефон</label>
+          <input style={auroraField} value={regPhone} onChange={e => setRegPhone(e.target.value)} />
 
-          <input style={auroraInput} placeholder="Email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} />
+          <label style={{ marginTop: 10 }}>Email</label>
+          <input style={auroraField} value={regEmail} onChange={e => setRegEmail(e.target.value)} />
 
-          <input style={auroraInput} placeholder="Instagram" value={regInstagram} onChange={(e) => setRegInstagram(e.target.value)} />
+          <label style={{ marginTop: 10 }}>Instagram (необязательно)</label>
+          <input style={auroraField} value={regInstagram} onChange={e => setRegInstagram(e.target.value)} />
 
+          <label style={{ marginTop: 10 }}>Пароль</label>
+          <input type="password" style={auroraField} value={password} onChange={e => setPassword(e.target.value)} />
+
+          <button style={auroraButton} onClick={registerHandler}>
+            Зарегистрироваться
+          </button>
+        </>
+      )}
+
+      {/* RECOVERY */}
+      {recoveryOpen && (
+        <div style={{ marginTop: 20 }}>
+          <label>Телефон или Email</label>
           <input
-            style={auroraInput}
-            type="password"
-            placeholder="Пароль"
-            value={regPassword}
-            onChange={(e) => setRegPassword(e.target.value)}
+            style={auroraField}
+            value={recoveryPhone}
+            onChange={e => setRecoveryPhone(e.target.value)}
           />
 
-          <button style={auroraButton} onClick={doRegister}>Создать аккаунт</button>
-        </div>
-      )}
+          <button style={auroraButton} onClick={recover}>Восстановить</button>
 
-      {/* ✅ PASSWORD RECOVERY MODAL */}
-      {recoveryOpen && (
-        <div className="modal-backdrop" onClick={() => setRecoveryOpen(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Восстановление</h3>
-
-            <input
-              style={auroraInput}
-              placeholder="Ваш телефон"
-              value={recoveryPhone}
-              onChange={(e) => setRecoveryPhone(e.target.value)}
-            />
-
-            <button style={auroraButton} onClick={doRecovery}>Найти</button>
-
-            {foundPass && (
-              <p style={{ marginTop: 10, fontSize: 18 }}>
-                Ваш пароль: <b>{foundPass}</b>
-              </p>
-            )}
-          </div>
+          {foundPass && (
+            <div style={{ marginTop: 10, color: '#fff', fontSize: 18 }}>
+              Ваш пароль: <b>{foundPass}</b>
+            </div>
+          )}
         </div>
       )}
     </div>
