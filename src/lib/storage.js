@@ -37,9 +37,14 @@ export function findUserByEmail(email){
   return getUsers().find(u => u.email === email) || null;
 }
 
-// Найти по телефону ИЛИ email (универсальный логин)
+// Найти по телефону ИЛИ email
 export function findUserByLogin(login){
   return getUsers().find(
     u => u.phone === login || u.email === login
   ) || null;
+}
+
+// logout
+export function logoutUser(){
+  localStorage.removeItem(LS_CURRENT)
 }
