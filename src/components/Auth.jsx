@@ -3,315 +3,265 @@ import { getUsers, saveUsers, setCurrentUser, getCurrentUser } from '../lib/stor
 import { useI18n } from '../lib/i18n'
 import ForgotPasswordModal from './ForgotPasswordModal'
 
-export default function Auth({ onAuth }) {
+export default function Auth() {
   const { t } = useI18n()
-
   const [mode, setMode] = useState('login')
-  const [name, setName] = useState('')
-  const [instagram, setInstagram] = useState('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
+  const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
-  const [identifier, setIdentifier] = useState('')
+  const [regName, setRegName] = useState('')
+  const [regPhone, setRegPhone] = useState('')
+  const [regEmail, setRegEmail] = useState('')
+  const [regInstagram, setRegInstagram] = useState('')
+  const [regPassword, setRegPassword] = useState('')
+  const [foundPass, setFoundPass] = useState(null)
+  const [recoveryPhone, setRecoveryPhone] = useState('')
+  const [recoveryOpen, setRecoveryOpen] = useState(false)
+  const user = getCurrentUser()
 
-  const [recoverOpen, setRecoverOpen] = useState(false)
+  // гарантируем, что админы есть
+  useEffect(() => {
+    try { ensureDefaultAdmins() } catch (e) {}
+  }, [])
 
-  const submit = (e) => {
-    e.preventDefault()
-    const users = getUsers()
+  // LOGIN
+  const doLogin = () => {
+    const u = findUserByLogin(login.trim())
+    if (!u) return alert('Пользователь не найден')
+    if (u.password !== password) return alert('Неверный пароль')
+    saveCurrentUser(u)
+    window.location.reload()
+  }
 
-    if (mode === 'register') {
-      if (!name || !phone || !password) return alert('Заполните все поля')
-      if (users.find((u) => u.phone === phone)) return alert('Такой номер уже зарегистрирован')
-
-      const user = { name, instagram, phone, email, password }
-      users.push(user)
-      saveUsers(users)
-      setCurrentUser(user)
-      onAuth?.(user)
+  // REGISTER
+  const doRegister = () => {
+    if (!regName.trim() || !regPhone.trim() || !regPassword.trim()) {
+      alert('Заполните все поля')
       return
     }
+    if (findUserByPhone(regPhone.trim())) return alert('Телефон уже зарегистрирован')
+    if (regEmail.trim() && findUserByEmail(regEmail.trim()))
+      return alert('Email уже зарегистрирован')
 
-    const id = identifier.trim()
-    const user = users.find(
-      (u) => (u.phone === id || u.email === id) && u.password === password
-    )
-
-    if (!user) {
-      setRecoverOpen(true)
-      return alert('Неверный логин или пароль')
+    const newUser = {
+      name: regName.trim(),
+      phone: regPhone.trim(),
+      email: regEmail.trim(),
+      instagram: regInstagram.trim(),
+      password: regPassword.trim(),
+      isAdmin: false,
     }
-
-    setCurrentUser(user)
-    onAuth?.(user)
+    const users = getUsers()
+    users.push(newUser)
+    saveUsers(users)
+    saveCurrentUser(newUser)
+    window.location.reload()
   }
 
-  const logout = () => {
-    setCurrentUser(null)
-    onAuth?.(null)
+  // RECOVERY
+  const doRecover = () => {
+    const u = findUserByPhone(recoveryPhone.trim())
+    if (!u) return alert('Пользователь не найден')
+    setFoundPass(u.password)
   }
 
-  const current = getCurrentUser()
+  // LOGOUT
+  const doLogout = () => {
+    logoutUser()
+    window.location.reload()
+  }
 
-  // ✅ LOGGED IN — PREMIUM PURPLE AURORA BLOCK (без изменений)
-  if (current) {
-    const initials = current.name
-      ? current.name.split(" ").map(p => p[0]).join("").slice(0,2).toUpperCase()
-      : "U"
+  // ---------- UI ----------
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1px solid rgba(168,85,247,0.3)',
+    background: 'rgba(15,0,40,0.5)',
+    color: '#fff',
+    fontSize: '0.95rem',
+    outline: 'none',
+    transition: '0.25s',
+    marginBottom: '10px',
+  }
 
-    return (
-      <div
-        style={{
-          position: 'relative',
-          padding: '26px',
-          borderRadius: '22px',
-          background: 'rgba(15, 6, 26, 0.55)',
-          border: '1px solid rgba(168, 85, 247, 0.35)',
-          backdropFilter: 'blur(22px)',
-          WebkitBackdropFilter: 'blur(22px)',
-          boxShadow: '0 12px 45px rgba(0,0,0,0.45)',
-          overflow: 'hidden',
-          marginBottom: '30px',
-          fontFamily: 'Poppins, Inter, sans-serif'
-        }}
-      >
-        {/* Aurora */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            zIndex: 0,
-            background:
-              'radial-gradient(900px 500px at -10% 120%, rgba(168,85,247,0.18), transparent 65%),' +
-              'radial-gradient(700px 400px at 110% -20%, rgba(139,92,246,0.16), transparent 60%),' +
-              'radial-gradient(800px 450px at 50% 120%, rgba(99,102,241,0.12), transparent 65%)',
-            animation: 'auroraShift 12s ease-in-out infinite alternate'
-          }}
-        />
+  const btnPrimary = {
+    width: '100%',
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1px solid rgba(168,85,247,0.6)',
+    background: 'linear-gradient(135deg, rgba(120,0,255,0.6), rgba(70,0,150,0.6))',
+    color: '#fff',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '0.9rem',
+    transition: '0.25s',
+    marginTop: '10px',
+  }
 
-        {/* Border glow */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '22px',
-            padding: '1.5px',
-            background: 'linear-gradient(120deg, rgba(168,85,247,0.55), rgba(139,92,246,0.35), rgba(99,102,241,0.45))',
-            WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
-            WebkitMaskComposite: 'xor',
-            opacity: 0.7
-          }}
-        />
+  const btnSecondary = {
+    ...btnPrimary,
+    background: 'rgba(168,85,247,0.12)',
+    border: '1px solid rgba(168,85,247,0.4)',
+    marginTop: '15px',
+  }
 
-        {/* Content */}
-        <div style={{ position:'relative', zIndex:1, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          {/* LEFT */}
-          <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-            {/* Initials badge */}
-            <div
+  return (
+    <div
+      style={{
+        background: 'rgba(20,0,50,0.6)',
+        borderRadius: '18px',
+        border: '1px solid rgba(168,85,247,0.25)',
+        boxShadow: '0 0 25px rgba(138,43,226,0.25)',
+        padding: '25px 22px',
+        color: '#fff',
+        maxWidth: 360,
+        margin: '0 auto',
+        backdropFilter: 'blur(10px)',
+      }}
+    >
+      {!user && (
+        <>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 20, justifyContent: 'center' }}>
+            <button
+              onClick={() => setMode('login')}
               style={{
-                minWidth: 44,
-                height: 44,
-                borderRadius: 12,
-                background: 'rgba(168,85,247,0.18)',
-                border: '1px solid rgba(168,85,247,0.35)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                animation: 'avatarPulse 3.6s ease-in-out infinite'
+                ...btnSecondary,
+                width: '45%',
+                background: mode === 'login'
+                  ? 'linear-gradient(135deg, rgba(120,0,255,0.6), rgba(70,0,150,0.6))'
+                  : 'rgba(168,85,247,0.12)',
+                border: '1px solid rgba(168,85,247,0.4)',
               }}
             >
-              {initials}
-            </div>
-
-            {/* User data */}
-            <div>
-              <div
-                style={{
-                  fontSize: '1.35rem',
-                  fontWeight: 700,
-                  marginBottom: 3,
-                  background: 'linear-gradient(90deg, rgba(236,223,255,1), rgba(198,173,255,0.85))',
-                  WebkitBackgroundClip: 'text',
-                  color: 'transparent'
-                }}
-              >
-                {current.name}
-              </div>
-
-              {/* Phone */}
-              <div style={{ opacity:0.9, display:'flex', alignItems:'center', gap:6 }}>
-                📞 <span>{current.phone}</span>
-              </div>
-
-              {/* Instagram */}
-              {current.instagram && (
-                <div style={{ opacity:0.85, display:'flex', alignItems:'center', gap:6 }}>
-                  📸 <span>{current.instagram}</span>
-                </div>
-              )}
-
-              {/* Email */}
-              {current.email && (
-                <div style={{ opacity:0.85, display:'flex', alignItems:'center', gap:6 }}>
-                  ✉️ <span>{current.email}</span>
-                </div>
-              )}
-            </div>
+              Вход
+            </button>
+            <button
+              onClick={() => setMode('register')}
+              style={{
+                ...btnSecondary,
+                width: '45%',
+                background: mode === 'register'
+                  ? 'linear-gradient(135deg, rgba(120,0,255,0.6), rgba(70,0,150,0.6))'
+                  : 'rgba(168,85,247,0.12)',
+                border: '1px solid rgba(168,85,247,0.4)',
+              }}
+            >
+              Регистрация
+            </button>
           </div>
 
-          {/* RIGHT — LOGOUT */}
-          <button
-            onClick={logout}
-            style={{
-              padding: '6px 14px',
-              fontSize: '0.85rem',
-              borderRadius: '10px',
-              border: '1px solid rgba(168,85,247,0.5)',
-              background: 'rgba(168,85,247,0.12)',
-              color: '#fff',
-              cursor: 'pointer',
-              transition: '0.25s',
-              whiteSpace: 'nowrap',
-              backdropFilter: 'blur(6px)',
-              width: '65%',
-              textAlign: 'center',
-            }}
-          >
-            {t('logout')}
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ✅ LOGIN + REGISTER — переработан под Aurora/Glass
-  return (
-    <>
-      {/* локальные стили только для этой формы */}
-      <style>{`
-        .segmented {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-          padding: 6px;
-          border-radius: 16px;
-          background: linear-gradient(145deg, rgba(66,0,145,0.28), rgba(20,0,40,0.35));
-          border: 1px solid rgba(168,85,247,0.35);
-          backdrop-filter: blur(8px);
-        }
-        .segmented button {
-          height: 42px;
-          border-radius: 12px;
-          border: 1px solid rgba(168,85,247,0.35);
-          color: #fff;
-          background: rgba(31,0,63,0.45);
-          transition: .2s;
-        }
-        .segmented button.active {
-          background: linear-gradient(180deg, rgba(124,58,237,0.55), rgba(88,28,135,0.5));
-          box-shadow: inset 0 0 0 1px rgba(168,85,247,0.45), 0 10px 28px rgba(120,0,255,0.18);
-        }
-
-        .glass-input {
-          width: 100%;
-          height: 42px;
-          border-radius: 12px;
-          padding: 10px 12px;
-          color: #fff;
-          border: 1px solid rgba(168,85,247,0.35);
-          background: rgba(17,0,40,0.45);
-          outline: none;
-          transition: .2s;
-        }
-        .glass-input:focus {
-          border-color: rgba(168,85,247,0.65);
-          box-shadow: 0 0 0 3px rgba(168,85,247,0.18);
-          background: rgba(24,0,60,0.55);
-        }
-
-        .cta {
-          height: 42px;
-          border-radius: 12px;
-          border: 1px solid rgba(168,85,247,0.55);
-          color: #fff;
-          background: linear-gradient(180deg, rgba(124,58,237,0.6), rgba(88,28,135,0.55));
-          backdrop-filter: blur(6px);
-          transition: .2s;
-        }
-        .cta:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(120,0,255,0.22); }
-      `}</style>
-
-      <div className="card" style={{ paddingTop: 18 }}>
-        {/* Табы */}
-        <div className="segmented" style={{ marginBottom: 14 }}>
-          <button
-            type="button"
-            className={mode === 'login' ? 'active' : ''}
-            onClick={() => setMode('login')}
-          >
-            {t('login')}
-          </button>
-          <button
-            type="button"
-            className={mode === 'register' ? 'active' : ''}
-            onClick={() => setMode('register')}
-          >
-            {t('register')}
-          </button>
-        </div>
-
-        {/* Форма */}
-        <form onSubmit={submit} className="row" style={{ rowGap: 12 }}>
-          {mode === 'register' && (
+          {mode === 'login' && (
             <>
-              <div className="col">
-                <label>{t('name')}</label>
-                <input className="glass-input" value={name} onChange={(e)=>setName(e.target.value)} placeholder="Inga" />
+              <input
+                style={inputStyle}
+                placeholder="Телефон или Email"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
+              />
+              <input
+                style={inputStyle}
+                placeholder="Пароль"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button style={btnPrimary} onClick={doLogin}>
+                Войти
+              </button>
+
+              <div
+                style={{
+                  marginTop: 14,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                }}
+                onClick={() => setRecoveryOpen(!recoveryOpen)}
+              >
+                Забыли пароль?
               </div>
 
-              <div className="col">
-                <label>{t('instagram')}</label>
-                <input className="glass-input" value={instagram} onChange={(e)=>setInstagram(e.target.value)} placeholder="@username" />
-              </div>
-
-              <div className="col">
-                <label>{t('email_opt')}</label>
-                <input className="glass-input" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="name@example.com" />
-              </div>
-
-              <div className="col">
-                <label>{t('phone')}</label>
-                <input className="glass-input" value={phone} onChange={(e)=>setPhone(e.target.value)} placeholder="+3706..." />
-              </div>
+              {recoveryOpen && (
+                <div style={{ marginTop: 12 }}>
+                  <input
+                    style={inputStyle}
+                    placeholder="Введите телефон"
+                    value={recoveryPhone}
+                    onChange={(e) => setRecoveryPhone(e.target.value)}
+                  />
+                  <button style={btnSecondary} onClick={doRecover}>
+                    Восстановить
+                  </button>
+                  {foundPass && (
+                    <div style={{ marginTop: 10, textAlign: 'center' }}>
+                      Ваш пароль: <b>{foundPass}</b>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
-          {mode === 'login' && (
-            <div className="col">
-              <label>{t('phone_or_email')}</label>
-              <input className="glass-input" value={identifier} onChange={(e)=>setIdentifier(e.target.value)} placeholder="+3706... / email" />
-            </div>
+          {mode === 'register' && (
+            <>
+              <input
+                style={inputStyle}
+                placeholder="Имя"
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+              />
+              <input
+                style={inputStyle}
+                placeholder="Телефон"
+                value={regPhone}
+                onChange={(e) => setRegPhone(e.target.value)}
+              />
+              <input
+                style={inputStyle}
+                placeholder="Email"
+                value={regEmail}
+                onChange={(e) => setRegEmail(e.target.value)}
+              />
+              <input
+                style={inputStyle}
+                placeholder="Instagram"
+                value={regInstagram}
+                onChange={(e) => setRegInstagram(e.target.value)}
+              />
+              <input
+                style={inputStyle}
+                placeholder="Пароль"
+                type="password"
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+              />
+              <button style={btnPrimary} onClick={doRegister}>
+                Зарегистрироваться
+              </button>
+            </>
           )}
+        </>
+      )}
 
-          <div className="col">
-            <label>{t('password')}</label>
-            <input className="glass-input" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="••••••••" />
+      {user && (
+        <div style={{ textAlign: 'center' }}>
+          <div
+            style={{
+              fontSize: '1.1rem',
+              fontWeight: 600,
+              marginBottom: 10,
+            }}
+          >
+            {user.name || 'Профиль'}
           </div>
-
-          <div className="col" style={{ alignSelf:'end' }}>
-            <button type="submit" className="cta">
-              {mode === 'login' ? t('login') : t('register')}
-            </button>
+          <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+            {user.phone} {user.email && `• ${user.email}`}
           </div>
-        </form>
-      </div>
-
-      <ForgotPasswordModal open={recoverOpen} onClose={()=>setRecoverOpen(false)} />
-    </>
+          <button style={btnSecondary} onClick={doLogout}>
+            Выйти из аккаунта
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
